@@ -14,42 +14,42 @@ const PDFDownloadButton = dynamic(() => import("./PDFDownloadButton"), {
 });
 
 export default function PEAForm() {
-  const [dateOuverture, setDateOuverture] = useState("2010-01-01");
-  const [vlTotale, setVlTotale] = useState("20000");
-  const [totalVersements, setTotalVersements] = useState("10000");
-  const [montantRetrait, setMontantRetrait] = useState("1000");
+  const [dateOuverture, setDateOuverture] = useState("");
+  const [vlTotale, setVlTotale] = useState("");
+  const [totalVersements, setTotalVersements] = useState("");
+  const [montantRetrait, setMontantRetrait] = useState("");
   
   const [vlsHistoriques, setVlsHistoriques] = useState<HistoricalVL[]>([]);
   const [result, setResult] = useState<GainResult | null>(null);
 
   // Déterminer si on est en mode historique
-  const isHistoricalMode = new Date(dateOuverture) < new Date('2018-01-01');
+  const isHistoricalMode = dateOuverture && new Date(dateOuverture) < new Date('2018-01-01');
 
   // Initialiser les VL historiques si nécessaire
   useEffect(() => {
-    if (isHistoricalMode) {
+    if (isHistoricalMode && dateOuverture) {
       const openDate = new Date(dateOuverture);
       const relevantPivots = PIVOT_DATES
         .filter(d => d > openDate)
         .sort((a, b) => a.getTime() - b.getTime()) // Sort chronological
         .map(d => ({
           date: d.toISOString().split('T')[0],
-          vl: Number(totalVersements) // Valeur par défaut
+          vl: Number(totalVersements) || 0 // Valeur par défaut
         }));
       
       // La date d'ouverture est la plus ancienne
-      const initialVL = [{ date: dateOuverture, vl: Number(totalVersements) }, ...relevantPivots];
+      const initialVL = [{ date: dateOuverture, vl: Number(totalVersements) || 0 }, ...relevantPivots];
       setVlsHistoriques(initialVL);
     } else {
       setVlsHistoriques([]);
     }
-  }, [isHistoricalMode, dateOuverture]);
+  }, [isHistoricalMode, dateOuverture, totalVersements]);
 
   const handleReset = () => {
-    setDateOuverture("2010-01-01");
-    setVlTotale("20000");
-    setTotalVersements("10000");
-    setMontantRetrait("1000");
+    setDateOuverture("");
+    setVlTotale("");
+    setTotalVersements("");
+    setMontantRetrait("");
     setVlsHistoriques([]);
     setResult(null);
   };

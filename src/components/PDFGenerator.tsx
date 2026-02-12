@@ -2,97 +2,119 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { GainResult, PEA } from '@/lib/engine/types';
 
+// Design strict respectant le template CFONB
 const styles = StyleSheet.create({
   page: {
     padding: 30,
-    fontSize: 9,
+    fontSize: 8,
     fontFamily: 'Helvetica',
     color: '#000',
   },
-  header: {
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  mainTitle: {
+  title: {
     fontSize: 12,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
     textDecoration: 'underline',
-    marginBottom: 10,
   },
+  // Section layout
   section: {
-    marginBottom: 15,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#000',
   },
-  sectionHeader: {
-    backgroundColor: '#e5e7eb',
-    padding: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
+  sectionTitle: {
+    backgroundColor: '#F0F0F0',
+    padding: 3,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  row: {
-    flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
-    minHeight: 20,
-    alignItems: 'center',
+    textAlign: 'center',
   },
-  lastRow: {
+  grid2Col: {
     flexDirection: 'row',
-    minHeight: 20,
-    alignItems: 'center',
   },
-  col1: {
-    width: '40%',
-    paddingLeft: 5,
+  col: {
+    width: '50%',
+    padding: 5,
     borderRightWidth: 1,
     borderRightColor: '#000',
-    height: '100%',
-    justifyContent: 'center',
   },
-  col2: {
+  colLast: {
+    width: '50%',
+    padding: 5,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    marginBottom: 2,
+  },
+  label: {
     width: '60%',
-    paddingLeft: 5,
-    height: '100%',
-    justifyContent: 'center',
+    fontWeight: 'bold',
   },
+  value: {
+    width: '40%',
+  },
+  // Table styles
   table: {
-    width: '100%',
+    marginTop: 5,
     borderWidth: 1,
     borderColor: '#000',
+    borderBottomWidth: 0,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#F0F0F0',
     fontWeight: 'bold',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
+    minHeight: 25,
+    alignItems: 'center',
+    textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
+    minHeight: 18,
+    alignItems: 'center',
   },
-  tableCol: {
-    padding: 3,
+  cell: {
+    padding: 2,
     borderRightWidth: 1,
     borderRightColor: '#000',
+    height: '100%',
+    justifyContent: 'center',
+  },
+  cellLast: {
+    padding: 2,
+    height: '100%',
+    justifyContent: 'center',
+  },
+  textRight: {
+    textAlign: 'right',
+  },
+  textCenter: {
     textAlign: 'center',
   },
-  colDate: { width: '25%' },
-  colBase: { width: '25%' },
-  colRate: { width: '15%' },
-  colCsg: { width: '10%' },
-  colCrds: { width: '10%' },
-  colOther: { width: '15%' },
-  colTotal: { width: '15%', borderRightWidth: 0 },
-  
+  // Column Widths for the main table
+  wPeriod: { width: '15%' },
+  wBase: { width: '15%' },
+  wRate: { width: '10%' },
+  wComp: { width: '10%' }, // CRDS, CSG...
+  wTotal: { width: '10%' },
+
   footer: {
-    marginTop: 20,
+    position: 'absolute',
+    bottom: 30,
+    left: 30,
+    right: 30,
     fontSize: 7,
-    fontStyle: 'italic',
+    textAlign: 'center',
+    color: '#666',
+    borderTopWidth: 0.5,
+    borderTopColor: '#999',
+    paddingTop: 5,
   }
 });
 
@@ -102,112 +124,154 @@ interface PDFGeneratorProps {
 }
 
 const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
-  const formatDate = (d: string | Date) => new Date(d).toLocaleDateString('fr-FR');
-  const formatEuro = (val: number) => val.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const formatDate = (d: string | Date) => d ? new Date(d).toLocaleDateString('fr-FR') : '';
+  const formatEuro = (val: number | undefined) => (val || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+
+  // Helper to get tax by name for a period
+  const getTax = (period: any, key: string) => {
+    return period.taxes[key] || 0;
+  };
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.mainTitle}>BORDEREAU D'INFORMATIONS DE TRANSFERT DE PLAN D'EPARGNE EN ACTIONS</Text>
-        </View>
+        <Text style={styles.title}>BORDEREAU D'INFORMATIONS DE TRANSFERT DE PLAN D'EPARGNE EN ACTIONS</Text>
 
         {/* SECTION 1: INTERMEDIAIRES */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>INTERMEDIAIRE DONNEUR D'ORDRE / BENEFICIAIRE</Text>
-          <View style={styles.row}>
-            <View style={styles.col1}><Text>Etablissement teneur du compte :</Text></View>
-            <View style={styles.col2}><Text>Simulateur PEA Helper V3</Text></View>
-          </View>
-          <View style={styles.row}>
-            <View style={styles.col1}><Text>Nom du titulaire :</Text></View>
-            <View style={styles.col2}><Text>Client / Investisseur</Text></View>
-          </View>
-          <View style={styles.lastRow}>
-            <View style={styles.col1}><Text>Numéro de compte PEA :</Text></View>
-            <View style={styles.col2}><Text>00000000000</Text></View>
+          <View style={styles.grid2Col}>
+            <View style={styles.col}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 5, textDecoration: 'underline' }}>INTERMEDIAIRE DONNEUR D'ORDRE</Text>
+              <Text>Dénomination : PEA HELPER SIMULATOR</Text>
+              <Text>Adresse : ....................................................................</Text>
+              <Text>Code établissement : ...............................................</Text>
+            </View>
+            <View style={styles.colLast}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 5, textDecoration: 'underline' }}>INTERMEDIAIRE BENEFICIAIRE</Text>
+              <Text>Dénomination : ...........................................................</Text>
+              <Text>Adresse : ....................................................................</Text>
+              <Text>Code établissement : ...............................................</Text>
+            </View>
           </View>
         </View>
 
         {/* SECTION 2: CARACTERISTIQUES */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>CARACTERISTIQUES GENERALES DU PLAN TRANSFERE</Text>
-          <View style={styles.row}>
-            <View style={styles.col1}><Text>Date d'ouverture du plan :</Text></View>
-            <View style={styles.col2}><Text>{formatDate(input.dateOuverture)}</Text></View>
-          </View>
-          <View style={styles.row}>
-            <View style={styles.col1}><Text>Montant total des versements :</Text></View>
-            <View style={styles.col2}><Text>{formatEuro(input.totalVersements)}</Text></View>
-          </View>
-          <View style={styles.lastRow}>
-            <View style={styles.col1}><Text>Valeur liquidative au jour du retrait :</Text></View>
-            <View style={styles.col2}><Text>{formatEuro(input.valeurLiquidative)}</Text></View>
+          <Text style={styles.sectionTitle}>CARACTERISTIQUES GENERALES DU PLAN TRANSFERE</Text>
+          <View style={styles.grid2Col}>
+            <View style={styles.col}>
+              <View style={styles.fieldRow}>
+                <Text style={styles.label}>Date d'ouverture :</Text>
+                <Text style={styles.value}>{formatDate(input.dateOuverture)}</Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={styles.label}>Numéro du plan :</Text>
+                <Text style={styles.value}>................................</Text>
+              </View>
+            </View>
+            <View style={styles.colLast}>
+              <View style={styles.fieldRow}>
+                <Text style={styles.label}>Total versements :</Text>
+                <Text style={styles.value}>{formatEuro(input.totalVersements)}</Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={styles.label}>Valeur au retrait :</Text>
+                <Text style={styles.value}>{formatEuro(input.valeurLiquidative)}</Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* SECTION 3: CALCUL ASSIETTES */}
-        <View style={{ marginBottom: 10 }}>
-          <Text style={[styles.sectionHeader, { borderWidth: 1, borderColor: '#000', borderBottomWidth: 0 }]}>
+        {/* SECTION 3: TABLEAU DETAILLE DES CONTRIBUTIONS */}
+        <View style={{ marginTop: 5 }}>
+          <Text style={[styles.sectionTitle, { borderWidth: 1, borderColor: '#000', borderBottomWidth: 0 }]}>
             ELEMENTS DE CALCUL D'ASSIETTES DES CONTRIBUTIONS SOCIALES
           </Text>
           <View style={styles.table}>
+            {/* Header 1 */}
             <View style={styles.tableHeader}>
-              <View style={[styles.tableCol, styles.colDate]}><Text>Période</Text></View>
-              <View style={[styles.tableCol, styles.colBase]}><Text>Assiette Gain</Text></View>
-              <View style={[styles.tableCol, styles.colRate]}><Text>Taux Global</Text></View>
-              <View style={[styles.tableCol, styles.colTotal]}><Text>Montant dû</Text></View>
+              <View style={[styles.cell, { width: '12%' }]}><Text>Période</Text></View>
+              <View style={[styles.cell, { width: '12%' }]}><Text>Assiette</Text></View>
+              <View style={[styles.cell, { width: '8%' }]}><Text>CRDS 0,5%</Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text>CSG 3,4%</Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text>CSG 7,5%</Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text>CSG 8,2%</Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text>CSG 9,2%</Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text>PS 2%</Text></View>
+              <View style={[styles.cell, { width: '8%' }]}><Text>PS 2,2%</Text></View>
+              <View style={[styles.cell, { width: '8%' }]}><Text>Autres*</Text></View>
+              <View style={[styles.cellLast, { width: '15%' }]}><Text>Total Dû</Text></View>
             </View>
 
-            {result.detailsParPeriode ? (
-              result.detailsParPeriode.map((p, i) => (
-                <View key={i} style={styles.tableRow}>
-                  <View style={[styles.tableCol, styles.colDate]}><Text>{p.periodLabel}</Text></View>
-                  <View style={[styles.tableCol, styles.colBase]}><Text>{formatEuro(p.gain)}</Text></View>
-                  <View style={[styles.tableCol, styles.colRate]}><Text>{p.rates.total}%</Text></View>
-                  <View style={[styles.tableCol, styles.colTotal]}><Text>{formatEuro(p.taxes.total)}</Text></View>
-                </View>
-              ))
-            ) : (
-              <View style={styles.tableRow}>
-                <View style={[styles.tableCol, styles.colDate]}><Text>Post-2018</Text></View>
-                <View style={[styles.tableCol, styles.colBase]}><Text>{formatEuro(result.assietteGain)}</Text></View>
-                <View style={[styles.tableCol, styles.colRate]}><Text>17.2%</Text></View>
-                <View style={[styles.tableCol, styles.colTotal]}><Text>{formatEuro(result.montantPS)}</Text></View>
+            {/* Data Rows */}
+            {result.detailsParPeriode && result.detailsParPeriode.map((p, i) => (
+              <View key={i} style={styles.tableRow}>
+                <View style={[styles.cell, { width: '12%', fontSize: 6 }]}><Text>{p.periodLabel}</Text></View>
+                <View style={[styles.cell, { width: '12%' }, styles.textRight]}><Text>{formatEuro(p.gain)}</Text></View>
+                <View style={[styles.cell, { width: '8%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'crds'))}</Text></View>
+                <View style={[styles.cell, { width: '7%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'csg34'))}</Text></View>
+                <View style={[styles.cell, { width: '7%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'csg75'))}</Text></View>
+                <View style={[styles.cell, { width: '7%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'csg82'))}</Text></View>
+                <View style={[styles.cell, { width: '7%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'csg92'))}</Text></View>
+                <View style={[styles.cell, { width: '7%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'ps2'))}</Text></View>
+                <View style={[styles.cell, { width: '8%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'ps22'))}</Text></View>
+                <View style={[styles.cell, { width: '8%' }, styles.textRight]}><Text>{formatEuro(getTax(p, 'caps') + getTax(p, 'crsa') + getTax(p, 'psol'))}</Text></View>
+                <View style={[styles.cellLast, { width: '15%' }, styles.textRight, { fontWeight: 'bold' }]}><Text>{formatEuro(p.taxes.total)}</Text></View>
               </View>
-            )}
-            
-            {/* Totaux */}
-            <View style={[styles.tableRow, { fontWeight: 'bold', backgroundColor: '#f3f4f6' }]}>
-              <View style={[styles.tableCol, styles.colDate]}><Text>TOTAL</Text></View>
-              <View style={[styles.tableCol, styles.colBase]}><Text>{formatEuro(result.assietteGain)}</Text></View>
-              <View style={[styles.tableCol, styles.colRate]}><Text>-</Text></View>
-              <View style={[styles.tableCol, styles.colTotal]}><Text>{formatEuro(result.montantPS)}</Text></View>
+            ))}
+
+            {/* Total Row */}
+            <View style={[styles.tableRow, { backgroundColor: '#F0F0F0', fontWeight: 'bold' }]}>
+              <View style={[styles.cell, { width: '12%' }]}><Text>TOTAL</Text></View>
+              <View style={[styles.cell, { width: '12%' }, styles.textRight]}><Text>{formatEuro(result.assietteGain)}</Text></View>
+              <View style={[styles.cell, { width: '8%' }]}><Text></Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text></Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text></Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text></Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text></Text></View>
+              <View style={[styles.cell, { width: '7%' }]}><Text></Text></View>
+              <View style={[styles.cell, { width: '8%' }]}><Text></Text></View>
+              <View style={[styles.cell, { width: '8%' }]}><Text></Text></View>
+              <View style={[styles.cellLast, { width: '15%' }, styles.textRight]}><Text>{formatEuro(result.montantPS)}</Text></View>
+            </View>
+          </View>
+          <Text style={{ fontSize: 6, marginTop: 2 }}>* Autres incluent : CAPS (0,35% ou 1,1%), CRSA (1,1%), PSOL (2%) selon les périodes.</Text>
+        </View>
+
+        {/* SECTION 4: SYNTHESE */}
+        <View style={[styles.section, { marginTop: 15 }]}>
+          <Text style={styles.sectionTitle}>SYNTHESE FINANCIERE</Text>
+          <View style={styles.grid2Col}>
+            <View style={styles.col}>
+              <View style={styles.fieldRow}>
+                <Text style={styles.label}>Assiette de gain calculée :</Text>
+                <Text style={styles.value}>{formatEuro(result.assietteGain)}</Text>
+              </View>
+            </View>
+            <View style={styles.colLast}>
+              <View style={styles.fieldRow}>
+                <Text style={styles.label}>Total prélèvements sociaux :</Text>
+                <Text style={styles.value}>{formatEuro(result.montantPS)}</Text>
+              </View>
+              <View style={[styles.fieldRow, { marginTop: 5, paddingTop: 5, borderTopWidth: 1 }]}>
+                <Text style={[styles.label, { fontSize: 10 }]}>NET PERÇU :</Text>
+                <Text style={[styles.value, { fontSize: 10, fontWeight: 'bold' }]}>{formatEuro(result.netVendeur)}</Text>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* SECTION 4: RECAPITULATIF */}
-        <View style={[styles.section, { marginTop: 10 }]}>
-          <Text style={styles.sectionHeader}>SYNTHESE DE L'OPERATION</Text>
-          <View style={styles.row}>
-            <View style={styles.col1}><Text>Montant brut du retrait :</Text></View>
-            <View style={styles.col2}><Text>{formatEuro(result.montantRetrait)}</Text></View>
-          </View>
-          <View style={styles.row}>
-            <View style={styles.col1}><Text>Total des prélèvements sociaux :</Text></View>
-            <View style={styles.col2}><Text>{formatEuro(result.montantPS)}</Text></View>
-          </View>
-          <View style={[styles.lastRow, { backgroundColor: '#f0fdf4', fontWeight: 'bold' }]}>
-            <View style={styles.col1}><Text>MONTANT NET À CREDITER :</Text></View>
-            <View style={styles.col2}><Text>{formatEuro(result.netVendeur)}</Text></View>
+        <View style={{ marginTop: 20 }}>
+          <Text>Fait à .........................................., le {formatDate(new Date())}</Text>
+          <View style={{ flexDirection: 'row', marginTop: 10 }}>
+            <View style={{ width: '50%' }}><Text>Cachet de l'établissement</Text></View>
+            <View style={{ width: '50%' }}><Text>Signature du titulaire</Text></View>
           </View>
         </View>
 
         <Text style={styles.footer}>
-          Bordereau conforme au standard CFONB (Comité Français d'Organisation et de Normalisation Bancaires). 
-          Ce document est une simulation établie sur la base des informations fournies par l'utilisateur.
-          Date d'édition : {formatDate(new Date())}
+          Document généré par PEA Helper - Conforme à la communication CFONB n° 20190030 du 04/09/2019.
+          Le Comité Français d'Organisation et de Normalisation Bancaires définit le format standard de transfert de PEA entre établissements.
         </Text>
       </Page>
     </Document>

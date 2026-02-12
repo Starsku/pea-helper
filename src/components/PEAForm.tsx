@@ -41,13 +41,22 @@ export default function PEAForm() {
     if (dateOuverture) {
       const openDate = new Date(dateOuverture);
       setEvents(prev => {
-        // Garder les événements qui ne sont pas des VL_PIVOT
-        const otherEvents = prev.filter(e => e.type !== 'VL_PIVOT');
+        // Garder les événements qui ne sont pas des VL_PIVOT et pas le versement initial auto
+        const otherEvents = prev.filter(e => e.type !== 'VL_PIVOT' && e.id !== 'initial-deposit');
+        
+        // Créer ou mettre à jour le versement initial
+        const existingInitial = prev.find(e => e.id === 'initial-deposit');
+        const initialDeposit: PEAEvent = {
+          id: 'initial-deposit',
+          type: 'VERSEMENT',
+          date: dateOuverture,
+          montant: existingInitial?.montant || 0,
+        };
+
         // Générer les nouveaux pivots basés sur la nouvelle date d'ouverture
         const pivots: PEAEvent[] = PIVOT_DATES
           .filter(d => d > openDate)
           .map(d => {
-            // Tenter de récupérer la VL existante si elle était déjà saisie
             const existing = prev.find(e => e.type === 'VL_PIVOT' && e.date === d.toISOString().split('T')[0]);
             return {
               id: existing?.id || generateId(),
@@ -56,7 +65,8 @@ export default function PEAForm() {
               vl: existing?.vl || 0
             };
           });
-        return [...otherEvents, ...pivots];
+        
+        return [initialDeposit, ...otherEvents, ...pivots];
       });
     }
   }, [dateOuverture]);
@@ -89,8 +99,30 @@ export default function PEAForm() {
     setResult(null);
   };
 
+  const isFormValid = () => {
+    if (!dateOuverture || !vlTotale || !montantRetraitActuel) return false;
+    if (Number(vlTotale) <= 0 || Number(montantRetraitActuel) <= 0) return false;
+    
+    // Vérifier les VL Pivots
+    const pivots = events.filter(e => e.type === 'VL_PIVOT');
+    if (pivots.some(p => !p.vl || p.vl <= 0)) return false;
+
+    // Vérifier les événements (Versements / Retraits)
+    const movements = events.filter(e => e.type !== 'VL_PIVOT');
+    if (movements.length === 0) return false; // Au moins le versement initial
+    
+    for (const event of movements) {
+      if (!event.date) return false;
+      if (event.montant === undefined || event.montant <= 0 || isNaN(event.montant)) return false;
+      if (event.type === 'RETRAIT' && (event.vl === undefined || event.vl <= 0 || isNaN(event.vl))) return false;
+    }
+
+    return true;
+  };
+
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid()) return;
     
     // Total des versements pour compatibilité et validation simple
     const totalVersements = events
@@ -149,7 +181,7 @@ export default function PEAForm() {
                 type="date"
                 value={dateOuverture}
                 onChange={(e) => setDateOuverture(e.target.value)}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                className={`w-full p-3 bg-slate-50 border ${!dateOuverture ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none`}
                 required
               />
             </div>
@@ -163,7 +195,7 @@ export default function PEAForm() {
                 value={vlTotale}
                 onChange={(e) => setVlTotale(e.target.value)}
                 placeholder="Ex: 12500.50"
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                className={`w-full p-3 bg-slate-50 border ${!vlTotale || Number(vlTotale) <= 0 ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none`}
                 required
               />
             </div>
@@ -176,7 +208,7 @@ export default function PEAForm() {
                 step="0.01"
                 value={montantRetraitActuel}
                 onChange={(e) => setMontantRetraitActuel(e.target.value)}
-                className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-bold text-indigo-900"
+                className={`w-full p-3 bg-indigo-50 border ${!montantRetraitActuel || Number(montantRetraitActuel) <= 0 ? 'border-red-300 bg-red-50' : 'border-indigo-100'} rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-bold text-indigo-900`}
                 required
               />
             </div>
@@ -200,7 +232,7 @@ export default function PEAForm() {
                         value={event.vl || ""}
                         onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
                         placeholder="VL à date..."
-                        className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none pr-6"
+                        className={`w-full p-2 bg-white border ${!event.vl || event.vl <= 0 ? 'border-red-300 bg-red-50' : 'border-blue-200'} rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none pr-6`}
                       />
                       <span className="absolute right-2 top-2 text-slate-400 text-[10px] font-bold">EUR</span>
                     </div>
@@ -272,7 +304,7 @@ export default function PEAForm() {
                             type="number"
                             value={event.montant}
                             onChange={(e) => updateEvent(event.id, { montant: Number(e.target.value) })}
-                            className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
+                            className={`w-24 p-1.5 bg-white border ${!event.montant || event.montant <= 0 ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded text-sm font-mono`}
                           />
                           <span className="text-slate-400 text-[10px] font-bold">EUR</span>
                         </div>
@@ -292,7 +324,7 @@ export default function PEAForm() {
                               type="number"
                               value={event.vl}
                               onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
-                              className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
+                              className={`w-24 p-1.5 bg-white border ${!event.vl || event.vl <= 0 ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded text-sm font-mono`}
                             />
                             <span className="text-slate-400 text-[10px] font-bold">EUR</span>
                           </div>
@@ -316,7 +348,8 @@ export default function PEAForm() {
           <div className="flex flex-col md:flex-row gap-4">
             <button
               type="submit"
-              className="flex-1 py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 hover:-translate-y-0.5"
+              disabled={!isFormValid()}
+              className="flex-1 py-4 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-white text-lg font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 hover:-translate-y-0.5"
             >
               Lancer la simulation chronologique
             </button>

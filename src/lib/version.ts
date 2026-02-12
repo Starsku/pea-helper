@@ -1,7 +1,15 @@
 export const VERSION = {
-  current: '4.2.6',
+  current: '4.2.7',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.2.7',
+      date: '12/02/2026',
+      changes: [
+        'Alignement au pixel près : La colonne "Versions" est désormais parfaitement alignée avec le titre du formulaire principal.',
+        'Ajustement vertical : Correction du décalage (flottement trop bas) observé sur grand écran.',
+      ]
+    },
     {
       version: '4.2.6',
       date: '12/02/2026',

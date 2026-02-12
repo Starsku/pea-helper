@@ -5,9 +5,9 @@ import { VERSION } from '@/lib/version';
 
 export function VersionColumn() {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-fit">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-fit mt-1.5">
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-        <h2 className="font-bold text-slate-900">Versions</h2>
+        <h2 className="font-bold text-slate-900 leading-none">Versions</h2>
         <span className="text-xs font-bold px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full border border-blue-200">
           v{VERSION.current}
         </span>

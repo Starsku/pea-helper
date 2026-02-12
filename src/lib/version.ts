@@ -1,7 +1,17 @@
 export const VERSION = {
-  current: '4.2.4',
+  current: '4.2.6',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.2.6',
+      date: '12/02/2026',
+      changes: [
+        'Correction Alignement : Alignement parfait de la colonne des versions avec le formulaire sur PC.',
+        'Validation stricte : Tous les montants (y compris VL pivots) sont obligatoires pour le calcul.',
+        'Initialisation : Versement initial créé par défaut et non supprimable.',
+        'Responsive : Amélioration du comportement sticky de la barre latérale.',
+      ]
+    },
     {
       version: '4.2.4',
       date: '12/02/2026',

@@ -50,7 +50,7 @@ export default function PEAForm() {
           id: 'initial-deposit',
           type: 'VERSEMENT',
           date: dateOuverture,
-          montant: existingInitial?.montant || 0,
+          montant: existingInitial?.montant && existingInitial.montant > 0 ? existingInitial.montant : 0,
         };
 
         // Générer les nouveaux pivots basés sur la nouvelle date d'ouverture
@@ -77,7 +77,7 @@ export default function PEAForm() {
       id: generateId(),
       type,
       date: new Date().toISOString().split('T')[0],
-      montant: type === 'VERSEMENT' || type === 'RETRAIT' ? 0 : undefined,
+      montant: 0,
       vl: type === 'RETRAIT' ? 0 : undefined,
     };
     setEvents([...events, newEvent]);
@@ -88,6 +88,7 @@ export default function PEAForm() {
   };
 
   const removeEvent = (id: string) => {
+    if (id === 'initial-deposit') return; // Interdire la suppression du versement initial
     setEvents(events.filter(e => e.id !== id));
   };
 
@@ -334,7 +335,9 @@ export default function PEAForm() {
                       <button
                         type="button"
                         onClick={() => removeEvent(event.id)}
-                        className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                        disabled={event.id === 'initial-deposit'}
+                        className={`p-2 transition-colors ${event.id === 'initial-deposit' ? 'text-slate-100 cursor-not-allowed' : 'text-slate-300 hover:text-red-500'}`}
+                        title={event.id === 'initial-deposit' ? "Le versement initial ne peut pas être supprimé" : "Supprimer"}
                       >
                         <Trash2 size={18} />
                       </button>

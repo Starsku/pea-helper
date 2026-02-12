@@ -16,11 +16,11 @@ export default function Home() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-8 xl:col-span-9">
             <PEAForm />
           </div>
-          <div className="lg:col-span-4 xl:col-span-3">
+          <div className="lg:col-span-4 xl:col-span-3 sticky top-12">
             <VersionColumn />
           </div>
         </div>

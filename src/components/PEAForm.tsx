@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import { calculatePEAGain } from "@/lib/pea-engine";
 import { GainResult, HistoricalVL } from "@/lib/engine/types";
 import { PIVOT_DATES } from "@/lib/tax-rates";
+import CalculationDetails from "./CalculationDetails";
+import dynamic from "next/dynamic";
+
+// Import dynamique pour éviter les erreurs SSR avec react-pdf
+const PDFDownloadButton = dynamic(() => import("./PDFDownloadButton"), { 
+  ssr: false,
+  loading: () => <div className="animate-pulse h-10 bg-slate-200 rounded-lg w-full"></div>
+});
 
 export default function PEAForm() {
   const [dateOuverture, setDateOuverture] = useState("2010-01-01");
@@ -169,6 +177,17 @@ export default function PEAForm() {
                   ))}
                 </div>
               </div>
+
+              {/* Bouton PDF */}
+              <PDFDownloadButton 
+                result={result} 
+                input={{
+                  dateOuverture,
+                  valeurLiquidative: Number(vlTotale),
+                  totalVersements: Number(totalVersements),
+                  vlsHistoriques
+                }} 
+              />
             </div>
 
             {/* Tableau des Périodes */}
@@ -207,6 +226,18 @@ export default function PEAForm() {
             </div>
           </div>
         </div>
+      )}
+
+      {result && (
+        <CalculationDetails 
+          result={result} 
+          input={{
+            dateOuverture,
+            valeurLiquidative: Number(vlTotale),
+            totalVersements: Number(totalVersements),
+            vlsHistoriques
+          }} 
+        />
       )}
     </div>
   );

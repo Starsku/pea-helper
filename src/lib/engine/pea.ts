@@ -40,6 +40,10 @@ export function calculateGain(pea: PEA, montantRetrait: number): GainResult {
     netVendeur: netVendeur.toNumber(),
     agePEA: Math.round(agePEA * 10) / 10,
     casSimple,
+    capitalInitial: versements.toNumber(),
+    capitalRestant: versements.toNumber(),
+    cumulVersementsRembourses: 0,
+    cumulRetraitsPasses: 0
   };
 }
 

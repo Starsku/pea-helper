@@ -1,6 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
-import { GainResult, PEA, HistoricalVL } from '@/lib/engine/types';
+import { GainResult, PEA } from '@/lib/engine/types';
 
 // Design strict respectant le standard CFONB
 const styles = StyleSheet.create({
@@ -77,25 +77,9 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
   };
 
   const getVLAt = (dateStr: string) => {
-    const found = input.vlsHistoriques?.find(v => v.date === dateStr);
-    return found ? found.vl : 0;
+    const found = input.events?.find(e => e.date === dateStr && (e.type === 'VL_PIVOT' || e.type === 'RETRAIT'));
+    return found ? (found.vl || 0) : 0;
   };
-
-  const renderSection = (title: string, rates: { label: string, date: string, valKey?: keyof GainResult['repartitionTaxes'] }[]) => (
-    <View style={{ marginTop: 15 }}>
-      <Text style={styles.bold}>{title}</Text>
-      {rates.map((r, i) => (
-        <View key={i} style={styles.tableRow}>
-          <View style={styles.cellLabel}>
-            <Text style={styles.indent}>{r.label}</Text>
-          </View>
-          <View style={styles.cellValue}>
-            <Text>{formatEuro(getVLAt(r.date))}</Text>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
 
   return (
     <Document>
@@ -118,88 +102,74 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Versements espérés depuis le 01/02/1996</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(0)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEuro(result.capitalInitial)}</Text></View>
           </View>
           
           <View style={{ backgroundColor: '#F9F9F9', padding: 5, borderBottomWidth: 1, marginTop: 5 }}>
-            <Text style={styles.bold}>CRDS Globale</Text>
+            <Text style={styles.bold}>CRDS Globale (Multi-retraits)</Text>
           </View>
           <View style={styles.tableRow}>
-            <View style={styles.cellLabel}><Text style={styles.indent}>Cumul hors plus-values des capitaux retirés</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(0)}</Text></View>
+            <View style={styles.cellLabel}><Text style={styles.indent}>Cumul des versements remboursés lors des retraits passés</Text></View>
+            <View style={styles.cellValue}><Text>{formatEuro(result.cumulVersementsRembourses)}</Text></View>
           </View>
           <View style={styles.tableRow}>
-            <View style={styles.cellLabel}><Text style={styles.indent}>Cumul des bases d'imposition déterminées lors des retraits</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(0)}</Text></View>
+            <View style={styles.cellLabel}><Text style={styles.indent}>Cumul des bases d'imposition déterminées lors des retraits passés</Text></View>
+            <View style={styles.cellValue}><Text>{formatEuro(result.cumulRetraitsPasses - result.cumulVersementsRembourses)}</Text></View>
           </View>
           <View style={styles.tableRow}>
-            <View style={styles.cellLabel}><Text style={styles.indent}>CRDS Taux FG (0,50% 1/1/2018)</Text></View>
+            <View style={styles.cellLabel}><Text style={styles.indent}>CRDS sur retrait actuel</Text></View>
             <View style={styles.cellValue}><Text>{formatEuro(result.repartitionTaxes?.crds)}</Text></View>
           </View>
 
           {/* CSG Section */}
           <View style={{ backgroundColor: '#F9F9F9', padding: 5, borderBottomWidth: 1, marginTop: 10 }}>
-            <Text style={styles.bold}>Pour calcul de la CSG à 3,4%</Text>
+            <Text style={styles.bold}>Pour calcul de la CSG</Text>
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Valeur liquidative au 31/12/1996</Text></View>
             <View style={styles.cellValue}><Text>{formatEuro(getVLAt('1996-12-31'))}</Text></View>
           </View>
-          <View style={styles.tableRow}>
-            <View style={styles.cellLabel}><Text style={styles.indent}>Versements espérés depuis le 01/01/1997</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(0)}</Text></View>
-          </View>
-
-          {/* ... Other CSG Rates ... */}
+          
           <View style={{ backgroundColor: '#F9F9F9', padding: 5, borderBottomWidth: 1, marginTop: 5 }}>
-            <Text style={styles.bold}>CSG Globale</Text>
+            <Text style={styles.bold}>Synthèse des Stocks (Mode Chronologique)</Text>
           </View>
           <View style={styles.tableRow}>
-            <View style={styles.cellLabel}><Text style={styles.indent}>Cumul hors plus-values des capitaux retirés</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(0)}</Text></View>
+            <View style={styles.cellLabel}><Text style={styles.indent}>Capital Initial (Versements)</Text></View>
+            <View style={styles.cellValue}><Text>{formatEuro(result.capitalInitial)}</Text></View>
           </View>
           <View style={styles.tableRow}>
-            <View style={styles.cellLabel}>
-              <Text style={styles.indent}>Cumul des bases d'imposition déterminées lors des retraits pour :</Text>
-              <Text style={[styles.indent, { paddingLeft: 30 }]}>CSG à 3,4%</Text>
-              <Text style={[styles.indent, { paddingLeft: 30 }]}>CSG à 7,5%</Text>
-              <Text style={[styles.indent, { paddingLeft: 30 }]}>CSG à 8,2%</Text>
-              <Text style={[styles.indent, { paddingLeft: 30 }]}>CSG à 9,2%</Text>
-              <Text style={[styles.indent, { paddingLeft: 30 }]}>CSG à 10,6%</Text>
-            </View>
-            <View style={styles.cellValue}>
-              <Text style={{ marginTop: 12 }}>{formatEuro(0)}</Text>
-              <Text>{formatEuro(0)}</Text>
-              <Text>{formatEuro(0)}</Text>
-              <Text>{formatEuro(0)}</Text>
-              <Text>{formatEuro(0)}</Text>
-            </View>
+            <View style={styles.cellLabel}><Text style={styles.indent}>Capital Restant Net (après retraits passés)</Text></View>
+            <View style={styles.cellValue}><Text>{formatEuro(result.capitalRestant)}</Text></View>
           </View>
           <View style={styles.tableRow}>
-            <View style={styles.cellLabel}><Text style={styles.indent}>CSG Taux FG (9,20% 1/1/2019)</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.repartitionTaxes?.csg)}</Text></View>
+            <View style={styles.cellLabel}><Text style={styles.indent}>Assiette de gain du retrait actuel</Text></View>
+            <View style={styles.cellValue}><Text>{formatEuro(result.assietteGain)}</Text></View>
           </View>
 
           {/* PS Section */}
           <View style={{ backgroundColor: '#F9F9F9', padding: 5, borderBottomWidth: 1, marginTop: 10 }}>
-            <Text style={styles.bold}>Prélèvements Sociaux (PS, CAPS, PSOL...)</Text>
+            <Text style={styles.bold}>Contributions Sociales Totales (CSG, CRDS, PS, CAPS...)</Text>
           </View>
           <View style={styles.tableRow}>
-            <View style={styles.cellLabel}><Text style={styles.indent}>Total des prélèvements calculés</Text></View>
+            <View style={styles.cellLabel}><Text style={styles.indent}>Total des prélèvements calculés sur ce retrait</Text></View>
             <View style={styles.cellValue}><Text>{formatEuro(result.montantPS)}</Text></View>
           </View>
 
         </View>
 
         <View style={{ marginTop: 40, borderTopWidth: 1, paddingTop: 10 }}>
-          <Text style={styles.bold}>SYNTHESE</Text>
-          <Text>Assiette de gain : {result.assietteGain.toFixed(2)} €</Text>
-          <Text>Total Contributions : {result.montantPS.toFixed(2)} €</Text>
-          <Text style={[styles.bold, { fontSize: 12, marginTop: 5 }]}>NET A PERCEVOIR : {result.netVendeur.toFixed(2)} €</Text>
+          <Text style={styles.bold}>SYNTHESE DU RETRAIT</Text>
+          <Text>Montant Brut du Retrait : {result.montantRetrait.toFixed(2)} €</Text>
+          <Text>Dont part de Capital (exonérée) : {(result.montantRetrait - result.assietteGain).toFixed(2)} €</Text>
+          <Text>Dont part de Gain (taxable) : {result.assietteGain.toFixed(2)} €</Text>
+          <Text>Total Contributions Sociales : {result.montantPS.toFixed(2)} €</Text>
+          <View style={{ marginTop: 10, padding: 10, backgroundColor: '#EEE' }}>
+            <Text style={[styles.bold, { fontSize: 12 }]}>NET A PERCEVOIR : {result.netVendeur.toFixed(2)} €</Text>
+          </View>
         </View>
 
         <Text style={{ position: 'absolute', bottom: 30, left: 40, right: 40, fontSize: 7, textAlign: 'center', color: '#666' }}>
-          Document généré par PEA Helper v3.1.0 - Format CFONB Standard.
+          Document généré par PEA Helper v4.0.0 - Replay Chronologique de l'historique du plan.
         </Text>
       </Page>
     </Document>

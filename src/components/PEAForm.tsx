@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { calculatePEAGain } from "@/lib/pea-engine";
-import { GainResult, HistoricalVL } from "@/lib/engine/types";
+import { GainResult, PEAEvent, EventType } from "@/lib/engine/types";
 import { PIVOT_DATES } from "@/lib/tax-rates";
-import CalculationDetails from "./CalculationDetails";
+import CalculationTransparency from "./CalculationTransparency";
 import dynamic from "next/dynamic";
+import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+
+// Helper simple pour générer des IDs sans dépendance externe
+const generateId = () => Math.random().toString(36).substr(2, 9);
 
 // Import dynamique pour éviter les erreurs SSR avec react-pdf
 const PDFDownloadButton = dynamic(() => import("./PDFDownloadButton"), { 
@@ -16,142 +20,238 @@ const PDFDownloadButton = dynamic(() => import("./PDFDownloadButton"), {
 export default function PEAForm() {
   const [dateOuverture, setDateOuverture] = useState("");
   const [vlTotale, setVlTotale] = useState("");
-  const [totalVersements, setTotalVersements] = useState("");
-  const [montantRetrait, setMontantRetrait] = useState("");
-  
-  const [vlsHistoriques, setVlsHistoriques] = useState<HistoricalVL[]>([]);
+  const [montantRetraitActuel, setMontantRetraitActuel] = useState("");
+  const [events, setEvents] = useState<PEAEvent[]>([]);
   const [result, setResult] = useState<GainResult | null>(null);
 
-  // Déterminer si on est en mode historique
-  const isHistoricalMode = dateOuverture && new Date(dateOuverture) < new Date('2018-01-01');
-
-  // Initialiser les VL historiques si nécessaire
+  // Initialisation auto des VL Pivots quand la date d'ouverture change
   useEffect(() => {
-    if (isHistoricalMode && dateOuverture) {
+    if (dateOuverture && events.filter(e => e.type === 'VL_PIVOT').length === 0) {
       const openDate = new Date(dateOuverture);
-      const relevantPivots = PIVOT_DATES
+      const pivots: PEAEvent[] = PIVOT_DATES
         .filter(d => d > openDate)
-        .sort((a, b) => a.getTime() - b.getTime()) // Chronological: oldest to newest
         .map(d => ({
+          id: generateId(),
+          type: 'VL_PIVOT',
           date: d.toISOString().split('T')[0],
-          vl: Number(totalVersements) || 0 // Valeur par défaut
+          vl: 0
         }));
-      
-      // La date d'ouverture est la plus ancienne
-      const initialVL = [{ date: dateOuverture, vl: Number(totalVersements) || 0 }, ...relevantPivots];
-      setVlsHistoriques(initialVL);
-    } else {
-      setVlsHistoriques([]);
+      if (pivots.length > 0) {
+        setEvents(prev => [...prev, ...pivots]);
+      }
     }
-  }, [isHistoricalMode, dateOuverture, totalVersements]);
+  }, [dateOuverture]);
+
+  const addEvent = (type: EventType) => {
+    const newEvent: PEAEvent = {
+      id: generateId(),
+      type,
+      date: new Date().toISOString().split('T')[0],
+      montant: type === 'VERSEMENT' || type === 'RETRAIT' ? 0 : undefined,
+      vl: type === 'RETRAIT' || type === 'VL_PIVOT' ? 0 : undefined,
+    };
+    setEvents([...events, newEvent]);
+  };
+
+  const updateEvent = (id: string, updates: Partial<PEAEvent>) => {
+    setEvents(events.map(e => e.id === id ? { ...e, ...updates } : e));
+  };
+
+  const removeEvent = (id: string) => {
+    setEvents(events.filter(e => e.id !== id));
+  };
 
   const handleReset = () => {
     setDateOuverture("");
     setVlTotale("");
-    setTotalVersements("");
-    setMontantRetrait("");
-    setVlsHistoriques([]);
+    setMontantRetraitActuel("");
+    setEvents([]);
     setResult(null);
-  };
-
-  const handleVLChange = (index: number, value: string) => {
-    const newVls = [...vlsHistoriques];
-    newVls[index].vl = Number(value);
-    setVlsHistoriques(newVls);
   };
 
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Total des versements pour compatibilité et validation simple
+    const totalVersements = events
+      .filter(e => e.type === 'VERSEMENT')
+      .reduce((acc, e) => acc + (e.montant || 0), 0);
+
     const res = calculatePEAGain({
       dateOuverture,
       valeurLiquidative: Number(vlTotale),
-      totalVersements: Number(totalVersements),
-      vlsHistoriques
-    }, Number(montantRetrait));
+      totalVersements,
+      events
+    }, Number(montantRetraitActuel));
+    
     setResult(res);
   };
 
+  const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h2 className="text-xl font-bold mb-6 text-slate-800">Paramètres du PEA</h2>
-        <form onSubmit={handleCalculate} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Date d'Ouverture</label>
+    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-8">
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100">
+        <h2 className="text-2xl font-bold mb-8 text-slate-900 flex items-center gap-2">
+          <div className="w-2 h-8 bg-indigo-600 rounded-full"></div>
+          Configuration du PEA
+        </h2>
+        
+        <form onSubmit={handleCalculate} className="space-y-10">
+          {/* Infos de base */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                <Calendar size={16} /> Date d'Ouverture
+              </label>
               <input
                 type="date"
                 value={dateOuverture}
                 onChange={(e) => setDateOuverture(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded-md"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">VL Actuelle (€)</label>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                <TrendingUp size={16} /> VL Actuelle (€)
+              </label>
               <input
                 type="number"
+                step="0.01"
                 value={vlTotale}
                 onChange={(e) => setVlTotale(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded-md"
+                placeholder="Ex: 12500.50"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Total Versements (€)</label>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                <ArrowDownCircle size={16} className="text-indigo-600" /> Montant Retrait Souhaité (€)
+              </label>
               <input
                 type="number"
-                value={totalVersements}
-                onChange={(e) => setTotalVersements(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Montant du Retrait (€)</label>
-              <input
-                type="number"
-                value={montantRetrait}
-                onChange={(e) => setMontantRetrait(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded-md"
+                step="0.01"
+                value={montantRetraitActuel}
+                onChange={(e) => setMontantRetraitActuel(e.target.value)}
+                className="w-full p-3 bg-indigo-50 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-bold text-indigo-900"
+                required
               />
             </div>
           </div>
 
-          {isHistoricalMode && (
-            <div className="mt-8 p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <h3 className="text-sm font-bold text-amber-800 mb-4 uppercase tracking-wider">
-                Saisie des VL Historiques (Dates Charnières)
-              </h3>
-              <p className="text-xs text-amber-700 mb-4">
-                Pour appliquer les taux historiques, veuillez saisir la Valeur Liquidative du PEA aux dates suivantes :
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {vlsHistoriques.map((vl, idx) => (
-                  <div key={vl.date}>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      VL au {new Date(vl.date).toLocaleDateString('fr-FR')}
-                    </label>
-                    <input
-                      type="number"
-                      value={vl.vl}
-                      onChange={(e) => handleVLChange(idx, e.target.value)}
-                      className="w-full p-2 text-sm border border-amber-300 rounded-md focus:ring-amber-500"
-                    />
-                  </div>
-                ))}
+          {/* Timeline d'événements */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-800">Historique des événements</h3>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => addEvent('VERSEMENT')}
+                  className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-100 hover:bg-green-100 transition-colors flex items-center gap-1"
+                >
+                  <Plus size={14} /> Versement
+                </button>
+                <button
+                  type="button"
+                  onClick={() => addEvent('RETRAIT')}
+                  className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs font-bold border border-orange-100 hover:bg-orange-100 transition-colors flex items-center gap-1"
+                >
+                  <Plus size={14} /> Retrait passé
+                </button>
+                <button
+                  type="button"
+                  onClick={() => addEvent('VL_PIVOT')}
+                  className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100 hover:bg-blue-100 transition-colors flex items-center gap-1"
+                >
+                  <Plus size={14} /> VL Pivot
+                </button>
               </div>
             </div>
-          )}
 
-          <div className="flex gap-4">
+            <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
+              {sortedEvents.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-sm italic">
+                  Aucun événement enregistré. Ajoutez vos versements et retraits passés pour un calcul précis.
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {sortedEvents.map((event) => (
+                    <div key={event.id} className="p-4 flex flex-wrap items-center gap-4 hover:bg-white transition-colors">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        event.type === 'VERSEMENT' ? 'bg-green-100 text-green-600' : 
+                        event.type === 'RETRAIT' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                      }`}>
+                        {event.type === 'VERSEMENT' ? <ArrowUpCircle size={20} /> : 
+                         event.type === 'RETRAIT' ? <ArrowDownCircle size={20} /> : <TrendingUp size={20} />}
+                      </div>
+                      
+                      <div className="w-32">
+                        <input
+                          type="date"
+                          value={event.date}
+                          onChange={(e) => updateEvent(event.id, { date: e.target.value })}
+                          className="w-full bg-transparent border-none text-sm font-medium focus:ring-0 p-0"
+                        />
+                      </div>
+
+                      <div className="flex-1 font-bold text-slate-700 text-sm">
+                        {event.type === 'VERSEMENT' ? 'VERSEMENT' : event.type === 'RETRAIT' ? 'RETRAIT PASSÉ' : 'VALEUR LIQUIDATIVE'}
+                      </div>
+
+                      <div className="flex gap-4 items-center">
+                        {(event.type === 'VERSEMENT' || event.type === 'RETRAIT') && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-bold text-slate-400">Montant</span>
+                            <input
+                              type="number"
+                              value={event.montant}
+                              onChange={(e) => updateEvent(event.id, { montant: Number(e.target.value) })}
+                              className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
+                            />
+                            <span className="text-slate-400">€</span>
+                          </div>
+                        )}
+                        {(event.type === 'RETRAIT' || event.type === 'VL_PIVOT') && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] uppercase font-bold text-slate-400">VL à date</span>
+                            <input
+                              type="number"
+                              value={event.vl}
+                              onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
+                              className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
+                            />
+                            <span className="text-slate-400">€</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeEvent(event.id)}
+                        className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4">
             <button
               type="submit"
-              className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-all shadow-md"
+              className="flex-1 py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 hover:-translate-y-0.5"
             >
-              Calculer les contributions fiscales
+              Lancer la simulation chronologique
             </button>
             <button
               type="button"
               onClick={handleReset}
-              className="py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-lg transition-all border border-slate-200"
+              className="py-4 px-8 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-2xl transition-all border border-slate-200"
             >
               Réinitialiser
             </button>
@@ -160,103 +260,109 @@ export default function PEAForm() {
       </div>
 
       {result && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Résumé Principal */}
-            <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-lg font-bold mb-4">Résumé</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Assiette gain</span>
-                    <span className="font-semibold">{result.assietteGain.toFixed(2)} €</span>
+            <div className="lg:col-span-1 space-y-8">
+              <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-bl-full -mr-16 -mt-16 z-0"></div>
+                <h3 className="text-xl font-bold mb-6 relative z-10">Bilan du retrait</h3>
+                <div className="space-y-5 relative z-10">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium">Assiette taxable</span>
+                    <span className="text-lg font-bold text-slate-800">{result.assietteGain.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
                   </div>
-                  <div className="flex justify-between text-red-600">
-                    <span className="font-medium">Total Taxes</span>
-                    <span className="font-bold">-{result.montantPS.toFixed(2)} €</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium text-red-600">Total Taxes (PS)</span>
+                    <span className="text-lg font-bold text-red-600">-{result.montantPS.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
                   </div>
-                  <div className="pt-3 border-t flex justify-between text-xl font-bold text-green-600">
-                    <span>Net perçu</span>
-                    <span>{result.netVendeur.toFixed(2)} €</span>
+                  <div className="pt-5 border-t border-slate-100">
+                    <div className="text-sm text-slate-400 mb-1">Net à percevoir</div>
+                    <div className="text-4xl font-black text-green-600">
+                      {result.netVendeur.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Détail par Contribution */}
-              <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                <h3 className="text-sm font-bold uppercase text-slate-500 mb-4">Détail des Taxes</h3>
-                <div className="space-y-2 text-sm">
+              {/* Détail Technique */}
+              <div className="bg-slate-900 text-slate-300 p-8 rounded-3xl shadow-xl">
+                <h3 className="text-xs font-black uppercase tracking-widest text-indigo-400 mb-6">Répartition Fiscalité</h3>
+                <div className="space-y-4">
                   {Object.entries(result.repartitionTaxes || {}).map(([key, val]) => (
                     val > 0 && key !== 'total' && (
-                      <div key={key} className="flex justify-between">
-                        <span className="uppercase text-slate-600">{key}</span>
-                        <span className="font-mono">{val.toFixed(2)} €</span>
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="text-sm font-bold uppercase">{key}</span>
+                        <div className="flex items-center gap-3">
+                           <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-indigo-500" 
+                                style={{ width: `${(val / (result.repartitionTaxes?.total || 1)) * 100}%` }}
+                              ></div>
+                           </div>
+                           <span className="font-mono text-white">{val.toFixed(2)} €</span>
+                        </div>
                       </div>
                     )
                   ))}
+                  <div className="pt-4 border-t border-slate-800 flex justify-between items-center font-bold text-white">
+                    <span>TOTAL</span>
+                    <span className="text-xl">{result.montantPS.toFixed(2)} €</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bouton PDF */}
+              {/* Actions */}
               <PDFDownloadButton 
                 result={result} 
                 input={{
                   dateOuverture,
                   valeurLiquidative: Number(vlTotale),
-                  totalVersements: Number(totalVersements),
-                  vlsHistoriques
+                  totalVersements: result.capitalInitial,
+                  events
                 }} 
               />
             </div>
 
             {/* Tableau des Périodes */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <h3 className="text-lg font-bold mb-4">Ventilation par période fiscale</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      <th className="py-3 font-semibold text-slate-700">Période</th>
-                      <th className="py-3 font-semibold text-slate-700 text-right">Gain</th>
-                      <th className="py-3 font-semibold text-slate-700 text-right">Taux</th>
-                      <th className="py-3 font-semibold text-slate-700 text-right">Taxe</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {result.detailsParPeriode?.map((p, i) => (
-                      <tr key={i} className="hover:bg-slate-50">
-                        <td className="py-3 text-slate-600">{p.periodLabel}</td>
-                        <td className="py-3 text-right font-mono">{p.gain.toFixed(2)} €</td>
-                        <td className="py-3 text-right text-slate-500">{p.rates.total}%</td>
-                        <td className="py-3 text-right font-semibold text-red-500">-{p.taxes.total.toFixed(2)} €</td>
+            <div className="lg:col-span-2 space-y-8">
+              <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
+                  <div className="w-2 h-6 bg-amber-400 rounded-full"></div>
+                  Ventilation des gains par période
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="text-xs uppercase tracking-wider text-slate-400 font-black border-b border-slate-50">
+                        <th className="pb-4">Période Fiscale</th>
+                        <th className="pb-4 text-right">Quote-part Gain</th>
+                        <th className="pb-4 text-right">Taux</th>
+                        <th className="pb-4 text-right">Prélèvement</th>
                       </tr>
-                    ))}
-                    {!result.detailsParPeriode && (
-                      <tr>
-                        <td className="py-3 text-slate-600">Période Unique (Post-2026)</td>
-                        <td className="py-3 text-right font-mono">{result.assietteGain.toFixed(2)} €</td>
-                        <td className="py-3 text-right text-slate-500">18.6% (depuis 2026)</td>
-                        <td className="py-3 text-right font-semibold text-red-500">-{result.montantPS.toFixed(2)} €</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {result.detailsParPeriode?.map((p, i) => (
+                        <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+                          <td className="py-4 font-medium text-slate-700">{p.periodLabel}</td>
+                          <td className="py-4 text-right font-mono text-slate-600">{p.gain.toFixed(2)} €</td>
+                          <td className="py-4 text-right">
+                            <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-500">
+                              {p.rates.total}%
+                            </span>
+                          </td>
+                          <td className="py-4 text-right font-bold text-red-500">-{p.taxes.total.toFixed(2)} €</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              <CalculationTransparency result={result} />
             </div>
           </div>
         </div>
-      )}
-
-      {result && (
-        <CalculationDetails 
-          result={result} 
-          input={{
-            dateOuverture,
-            valeurLiquidative: Number(vlTotale),
-            totalVersements: Number(totalVersements),
-            vlsHistoriques
-          }} 
-        />
       )}
     </div>
   );

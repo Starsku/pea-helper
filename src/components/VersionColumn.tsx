@@ -13,8 +13,8 @@ export function VersionColumn() {
         </span>
       </div>
 
-      <div className="space-y-8">
-        {VERSION.changelog.slice(0, 5).map((entry, idx) => (
+      <div className="space-y-8 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+        {VERSION.changelog.map((entry, idx) => (
           <div key={entry.version} className="relative pl-6 border-l-2 border-slate-100 last:border-0 pb-2">
             {/* Dot */}
             <div className={`absolute left-[-9px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${idx === 0 ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
@@ -42,11 +42,11 @@ export function VersionColumn() {
         ))}
       </div>
       
-      {VERSION.changelog.length > 5 && (
+      {/* VERSION.changelog.length > 5 && (
         <p className="mt-4 text-center text-[10px] text-slate-400 italic">
           Voir l'historique complet pour plus de détails
         </p>
-      )}
+      ) */}
     </div>
   );
 }

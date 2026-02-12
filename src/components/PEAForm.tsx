@@ -97,7 +97,12 @@ export default function PEAForm() {
 
   const sortedEvents = [...events]
     .filter(e => e.type !== 'VL_PIVOT')
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort((a, b) => {
+      const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (dateCompare !== 0) return dateCompare;
+      // Stabilité du tri si dates identiques
+      return a.id.localeCompare(b.id);
+    });
 
   const pivotEvents = [...events]
     .filter(e => e.type === 'VL_PIVOT')
@@ -111,7 +116,15 @@ export default function PEAForm() {
           Configuration du PEA
         </h2>
         
-        <form onSubmit={handleCalculate} className="space-y-10">
+        <form 
+          onSubmit={handleCalculate} 
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-10"
+        >
           {/* Infos de base */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">

@@ -1,7 +1,16 @@
 export const VERSION = {
-  current: '4.1.1',
+  current: '4.2.0',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.2.0',
+      date: '12/02/2026',
+      changes: [
+        'Fix UX : Empêcher le "Submit on Enter" intempestif sur le formulaire.',
+        'Fix Timeline : Correction du focus lors de l\'édition des dates dans la timeline.',
+        'Amélioration : Historique complet des versions scrollable.',
+      ]
+    },
     {
       version: '4.1.1',
       date: '12/02/2026',

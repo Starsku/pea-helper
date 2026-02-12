@@ -1,130 +1,98 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { GainResult, PEA } from '@/lib/engine/types';
-
-// Enregistrement d'une police plus moderne (optionnel, sinon utilise Helvetica par défaut)
-// Font.register({ family: 'Helvetica', fontWeight: 'normal' });
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontSize: 10,
+    padding: 30,
+    fontSize: 9,
     fontFamily: 'Helvetica',
-    color: '#334155',
+    color: '#000',
   },
   header: {
-    marginBottom: 30,
-    borderBottom: 1,
-    borderBottomColor: '#e2e8f0',
-    paddingBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  date: {
-    fontSize: 9,
-    color: '#64748b',
-  },
-  section: {
     marginBottom: 20,
+    textAlign: 'center',
   },
-  sectionTitle: {
+  mainTitle: {
     fontSize: 12,
     fontWeight: 'bold',
+    textDecoration: 'underline',
     marginBottom: 10,
-    color: '#4f46e5',
+  },
+  section: {
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#000',
+  },
+  sectionHeader: {
+    backgroundColor: '#e5e7eb',
+    padding: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    fontWeight: 'bold',
     textTransform: 'uppercase',
   },
-  grid: {
+  row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    minHeight: 20,
+    alignItems: 'center',
   },
-  gridItem: {
-    width: '50%',
-    marginBottom: 8,
+  lastRow: {
+    flexDirection: 'row',
+    minHeight: 20,
+    alignItems: 'center',
   },
-  label: {
-    fontSize: 8,
-    color: '#64748b',
-    marginBottom: 2,
+  col1: {
+    width: '40%',
+    paddingLeft: 5,
+    borderRightWidth: 1,
+    borderRightColor: '#000',
+    height: '100%',
+    justifyContent: 'center',
   },
-  value: {
-    fontSize: 10,
-    fontWeight: 'bold',
+  col2: {
+    width: '60%',
+    paddingLeft: 5,
+    height: '100%',
+    justifyContent: 'center',
   },
   table: {
-    width: 'auto',
-    borderStyle: 'solid',
+    width: '100%',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-  },
-  tableRow: {
-    margin: 'auto',
-    flexDirection: 'row',
-    backgroundColor: '#f8fafc',
-  },
-  tableRowEven: {
-    backgroundColor: '#ffffff',
-  },
-  tableCol: {
-    width: '25%',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-  },
-  tableCell: {
-    margin: 5,
-    fontSize: 8,
-  },
-  tableCellRight: {
-    margin: 5,
-    fontSize: 8,
-    textAlign: 'right',
+    borderColor: '#000',
   },
   tableHeader: {
-    backgroundColor: '#f1f5f9',
-    fontWeight: 'bold',
-  },
-  footer: {
-    marginTop: 30,
-    paddingTop: 10,
-    borderTop: 1,
-    borderTopColor: '#e2e8f0',
-    textAlign: 'center',
-    color: '#94a3b8',
-    fontSize: 8,
-  },
-  summaryBox: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: '#f0fdf4',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-  },
-  summaryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  totalNet: {
-    fontSize: 14,
+    backgroundColor: '#e5e7eb',
     fontWeight: 'bold',
-    color: '#15803d',
-    marginTop: 5,
-    paddingTop: 5,
-    borderTop: 1,
-    borderTopColor: '#bbf7d0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+  },
+  tableCol: {
+    padding: 3,
+    borderRightWidth: 1,
+    borderRightColor: '#000',
+    textAlign: 'center',
+  },
+  colDate: { width: '25%' },
+  colBase: { width: '25%' },
+  colRate: { width: '15%' },
+  colCsg: { width: '10%' },
+  colCrds: { width: '10%' },
+  colOther: { width: '15%' },
+  colTotal: { width: '15%', borderRightWidth: 0 },
+  
+  footer: {
+    marginTop: 20,
+    fontSize: 7,
+    fontStyle: 'italic',
   }
 });
 
@@ -134,134 +102,112 @@ interface PDFGeneratorProps {
 }
 
 const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
-  const generationDate = new Date().toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const formatDate = (d: string | Date) => new Date(d).toLocaleDateString('fr-FR');
+  const formatEuro = (val: number) => val.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>BORDEREAU DE RETRAIT PEA</Text>
-            <Text style={styles.date}>Généré le {generationDate}</Text>
+          <Text style={styles.mainTitle}>BORDEREAU D'INFORMATIONS DE TRANSFERT DE PLAN D'EPARGNE EN ACTIONS</Text>
+        </View>
+
+        {/* SECTION 1: INTERMEDIAIRES */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>INTERMEDIAIRE DONNEUR D'ORDRE / BENEFICIAIRE</Text>
+          <View style={styles.row}>
+            <View style={styles.col1}><Text>Etablissement teneur du compte :</Text></View>
+            <View style={styles.col2}><Text>Simulateur PEA Helper V3</Text></View>
           </View>
-          <View style={{ textAlign: 'right' }}>
-            <Text style={{ fontSize: 10, fontWeight: 'bold' }}>PEA HELPER V3</Text>
-            <Text style={{ fontSize: 8 }}>Simulateur de contributions sociales</Text>
+          <View style={styles.row}>
+            <View style={styles.col1}><Text>Nom du titulaire :</Text></View>
+            <View style={styles.col2}><Text>Client / Investisseur</Text></View>
+          </View>
+          <View style={styles.lastRow}>
+            <View style={styles.col1}><Text>Numéro de compte PEA :</Text></View>
+            <View style={styles.col2}><Text>00000000000</Text></View>
           </View>
         </View>
 
-        {/* Caractéristiques du Plan */}
+        {/* SECTION 2: CARACTERISTIQUES */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Caractéristiques du Plan</Text>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Date d'ouverture</Text>
-              <Text style={styles.value}>
-                {new Date(input.dateOuverture).toLocaleDateString('fr-FR')}
-              </Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Ancienneté</Text>
-              <Text style={styles.value}>{result.agePEA} ans</Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Valeur Liquidative Totale</Text>
-              <Text style={styles.value}>{input.valeurLiquidative.toLocaleString('fr-FR')} €</Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Cumul des Versements</Text>
-              <Text style={styles.value}>{input.totalVersements.toLocaleString('fr-FR')} €</Text>
-            </View>
+          <Text style={styles.sectionHeader}>CARACTERISTIQUES GENERALES DU PLAN TRANSFERE</Text>
+          <View style={styles.row}>
+            <View style={styles.col1}><Text>Date d'ouverture du plan :</Text></View>
+            <View style={styles.col2}><Text>{formatDate(input.dateOuverture)}</Text></View>
+          </View>
+          <View style={styles.row}>
+            <View style={styles.col1}><Text>Montant total des versements :</Text></View>
+            <View style={styles.col2}><Text>{formatEuro(input.totalVersements)}</Text></View>
+          </View>
+          <View style={styles.lastRow}>
+            <View style={styles.col1}><Text>Valeur liquidative au jour du retrait :</Text></View>
+            <View style={styles.col2}><Text>{formatEuro(input.valeurLiquidative)}</Text></View>
           </View>
         </View>
 
-        {/* Détail du Retrait */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. Opération de Retrait</Text>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Montant Brut demandé</Text>
-              <Text style={styles.value}>{result.montantRetrait.toLocaleString('fr-FR')} €</Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Assiette de gain imposable</Text>
-              <Text style={styles.value}>{result.assietteGain.toLocaleString('fr-FR')} €</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Ventilation par période */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. Ventilation des Gains et Taxes</Text>
+        {/* SECTION 3: CALCUL ASSIETTES */}
+        <View style={{ marginBottom: 10 }}>
+          <Text style={[styles.sectionHeader, { borderWidth: 1, borderColor: '#000', borderBottomWidth: 0 }]}>
+            ELEMENTS DE CALCUL D'ASSIETTES DES CONTRIBUTIONS SOCIALES
+          </Text>
           <View style={styles.table}>
-            <View style={[styles.tableRow, styles.tableHeader]}>
-              <View style={styles.tableCol}><Text style={styles.tableCell}>Période</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCellRight}>Gain</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCellRight}>Taux PS</Text></View>
-              <View style={styles.tableCol}><Text style={styles.tableCellRight}>Prélèvement</Text></View>
+            <View style={styles.tableHeader}>
+              <View style={[styles.tableCol, styles.colDate]}><Text>Période</Text></View>
+              <View style={[styles.tableCol, styles.colBase]}><Text>Assiette Gain</Text></View>
+              <View style={[styles.tableCol, styles.colRate]}><Text>Taux Global</Text></View>
+              <View style={[styles.tableCol, styles.colTotal]}><Text>Montant dû</Text></View>
             </View>
-            
+
             {result.detailsParPeriode ? (
               result.detailsParPeriode.map((p, i) => (
-                <View key={i} style={[styles.tableRow, i % 2 === 1 ? styles.tableRowEven : {}]}>
-                  <View style={styles.tableCol}><Text style={styles.tableCell}>{p.periodLabel}</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCellRight}>{p.gain.toFixed(2)} €</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCellRight}>{p.rates.total}%</Text></View>
-                  <View style={styles.tableCol}><Text style={styles.tableCellRight}>{p.taxes.total.toFixed(2)} €</Text></View>
+                <View key={i} style={styles.tableRow}>
+                  <View style={[styles.tableCol, styles.colDate]}><Text>{p.periodLabel}</Text></View>
+                  <View style={[styles.tableCol, styles.colBase]}><Text>{formatEuro(p.gain)}</Text></View>
+                  <View style={[styles.tableCol, styles.colRate]}><Text>{p.rates.total}%</Text></View>
+                  <View style={[styles.tableCol, styles.colTotal]}><Text>{formatEuro(p.taxes.total)}</Text></View>
                 </View>
               ))
             ) : (
               <View style={styles.tableRow}>
-                <View style={styles.tableCol}><Text style={styles.tableCell}>Unique (Post-2018)</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCellRight}>{result.assietteGain.toFixed(2)} €</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCellRight}>17.2%</Text></View>
-                <View style={styles.tableCol}><Text style={styles.tableCellRight}>{result.montantPS.toFixed(2)} €</Text></View>
+                <View style={[styles.tableCol, styles.colDate]}><Text>Post-2018</Text></View>
+                <View style={[styles.tableCol, styles.colBase]}><Text>{formatEuro(result.assietteGain)}</Text></View>
+                <View style={[styles.tableCol, styles.colRate]}><Text>17.2%</Text></View>
+                <View style={[styles.tableCol, styles.colTotal]}><Text>{formatEuro(result.montantPS)}</Text></View>
               </View>
             )}
+            
+            {/* Totaux */}
+            <View style={[styles.tableRow, { fontWeight: 'bold', backgroundColor: '#f3f4f6' }]}>
+              <View style={[styles.tableCol, styles.colDate]}><Text>TOTAL</Text></View>
+              <View style={[styles.tableCol, styles.colBase]}><Text>{formatEuro(result.assietteGain)}</Text></View>
+              <View style={[styles.tableCol, styles.colRate]}><Text>-</Text></View>
+              <View style={[styles.tableCol, styles.colTotal]}><Text>{formatEuro(result.montantPS)}</Text></View>
+            </View>
           </View>
         </View>
 
-        {/* Détail Contributions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>4. Détail des Contributions Sociales</Text>
-          <View style={styles.grid}>
-            {Object.entries(result.repartitionTaxes || {}).map(([key, val]) => (
-              val > 0 && key !== 'total' && (
-                <View key={key} style={{ width: '33%', marginBottom: 5 }}>
-                  <Text style={styles.label}>{key.toUpperCase()}</Text>
-                  <Text style={{ fontSize: 9 }}>{val.toFixed(2)} €</Text>
-                </View>
-              )
-            ))}
+        {/* SECTION 4: RECAPITULATIF */}
+        <View style={[styles.section, { marginTop: 10 }]}>
+          <Text style={styles.sectionHeader}>SYNTHESE DE L'OPERATION</Text>
+          <View style={styles.row}>
+            <View style={styles.col1}><Text>Montant brut du retrait :</Text></View>
+            <View style={styles.col2}><Text>{formatEuro(result.montantRetrait)}</Text></View>
           </View>
-        </View>
-
-        {/* Synthèse Financière */}
-        <View style={styles.summaryBox}>
-          <View style={styles.summaryRow}>
-            <Text>Montant du retrait brut :</Text>
-            <Text>{result.montantRetrait.toLocaleString('fr-FR')} €</Text>
+          <View style={styles.row}>
+            <View style={styles.col1}><Text>Total des prélèvements sociaux :</Text></View>
+            <View style={styles.col2}><Text>{formatEuro(result.montantPS)}</Text></View>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={{ color: '#dc2626' }}>Total des prélèvements sociaux :</Text>
-            <Text style={{ color: '#dc2626' }}>- {result.montantPS.toLocaleString('fr-FR')} €</Text>
-          </View>
-          <View style={[styles.summaryRow, styles.totalNet]}>
-            <Text>MONTANT NET À PERCEVOIR :</Text>
-            <Text>{result.netVendeur.toLocaleString('fr-FR')} €</Text>
+          <View style={[styles.lastRow, { backgroundColor: '#f0fdf4', fontWeight: 'bold' }]}>
+            <View style={styles.col1}><Text>MONTANT NET À CREDITER :</Text></View>
+            <View style={styles.col2}><Text>{formatEuro(result.netVendeur)}</Text></View>
           </View>
         </View>
 
         <Text style={styles.footer}>
-          Document généré à titre indicatif par PEA Helper. 
-          Les calculs respectent la réglementation fiscale en vigueur (taux historiques vs taux forfaitaire).
+          Bordereau conforme au standard CFONB (Comité Français d'Organisation et de Normalisation Bancaires). 
+          Ce document est une simulation établie sur la base des informations fournies par l'utilisateur.
+          Date d'édition : {formatDate(new Date())}
         </Text>
       </Page>
     </Document>

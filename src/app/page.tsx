@@ -1,14 +1,18 @@
 "use client";
 
 import PEAForm from "@/components/PEAForm";
+import { VersionBadge } from "@/components/VersionBadge";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-4">
       <div className="max-w-5xl mx-auto">
+        <div className="flex justify-end">
+          <VersionBadge />
+        </div>
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-extrabold text-slate-900 mb-4">
-            PEA Helper <span className="text-indigo-600">V2</span>
+            PEA Helper
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Calculateur intelligent de prélèvements sociaux avec support des <span className="font-semibold text-slate-800">taux historiques</span> et détail complet des contributions.

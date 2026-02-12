@@ -31,18 +31,28 @@ export default function PEAForm() {
       const openDate = new Date(dateOuverture);
       const relevantPivots = PIVOT_DATES
         .filter(d => d > openDate)
+        .sort((a, b) => a.getTime() - b.getTime()) // Sort chronological
         .map(d => ({
           date: d.toISOString().split('T')[0],
           vl: Number(totalVersements) // Valeur par défaut
         }));
       
-      // Ajouter la date d'ouverture comme première VL
+      // La date d'ouverture est la plus ancienne
       const initialVL = [{ date: dateOuverture, vl: Number(totalVersements) }, ...relevantPivots];
       setVlsHistoriques(initialVL);
     } else {
       setVlsHistoriques([]);
     }
   }, [isHistoricalMode, dateOuverture]);
+
+  const handleReset = () => {
+    setDateOuverture("2010-01-01");
+    setVlTotale("20000");
+    setTotalVersements("10000");
+    setMontantRetrait("1000");
+    setVlsHistoriques([]);
+    setResult(null);
+  };
 
   const handleVLChange = (index: number, value: string) => {
     const newVls = [...vlsHistoriques];
@@ -131,12 +141,21 @@ export default function PEAForm() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-all shadow-md"
-          >
-            Calculer les contributions fiscales
-          </button>
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-all shadow-md"
+            >
+              Calculer les contributions fiscales
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-lg transition-all border border-slate-200"
+            >
+              Réinitialiser
+            </button>
+          </div>
         </form>
       </div>
 

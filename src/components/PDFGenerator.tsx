@@ -169,7 +169,7 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
         </View>
 
         <Text style={{ position: 'absolute', bottom: 30, left: 40, right: 40, fontSize: 7, textAlign: 'center', color: '#666' }}>
-          Document généré par PEA Helper v4.0.0 - Replay Chronologique de l'historique du plan.
+          Document généré par PEA Helper v4.1.0 - Replay Chronologique de l'historique du plan avec pivots automatiques.
         </Text>
       </Page>
     </Document>

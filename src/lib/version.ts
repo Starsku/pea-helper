@@ -1,7 +1,25 @@
 export const VERSION = {
-  current: '4.0.0',
+  current: '4.1.1',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.1.1',
+      date: '12/02/2026',
+      changes: [
+        'Rétablissement des VL pivots automatiques selon la date d\'ouverture et séparation claire de la timeline des mouvements.',
+        'Incrémentation de version pour forcer le déploiement v4.1.1.'
+      ]
+    },
+    {
+      version: '4.1.0',
+      date: '12/02/2026',
+      changes: [
+        'Automatisation des VL Pivots : génération automatique selon la date d\'ouverture',
+        'Séparation UI : Timeline des mouvements (Versements/Retraits) vs Champs VL Pivots fixes',
+        'Simplification de l\'expérience utilisateur (RETOUR V3.2 UX)',
+        'Mise à jour du PDF pour supporter les VL pivots automatiques'
+      ]
+    },
     {
       version: '4.0.0',
       date: '12/02/2026',

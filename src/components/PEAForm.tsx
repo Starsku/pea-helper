@@ -26,29 +26,37 @@ export default function PEAForm() {
 
   // Initialisation auto des VL Pivots quand la date d'ouverture change
   useEffect(() => {
-    if (dateOuverture && events.filter(e => e.type === 'VL_PIVOT').length === 0) {
+    if (dateOuverture) {
       const openDate = new Date(dateOuverture);
-      const pivots: PEAEvent[] = PIVOT_DATES
-        .filter(d => d > openDate)
-        .map(d => ({
-          id: generateId(),
-          type: 'VL_PIVOT',
-          date: d.toISOString().split('T')[0],
-          vl: 0
-        }));
-      if (pivots.length > 0) {
-        setEvents(prev => [...prev, ...pivots]);
-      }
+      setEvents(prev => {
+        // Garder les événements qui ne sont pas des VL_PIVOT
+        const otherEvents = prev.filter(e => e.type !== 'VL_PIVOT');
+        // Générer les nouveaux pivots basés sur la nouvelle date d'ouverture
+        const pivots: PEAEvent[] = PIVOT_DATES
+          .filter(d => d > openDate)
+          .map(d => {
+            // Tenter de récupérer la VL existante si elle était déjà saisie
+            const existing = prev.find(e => e.type === 'VL_PIVOT' && e.date === d.toISOString().split('T')[0]);
+            return {
+              id: existing?.id || generateId(),
+              type: 'VL_PIVOT',
+              date: d.toISOString().split('T')[0],
+              vl: existing?.vl || 0
+            };
+          });
+        return [...otherEvents, ...pivots];
+      });
     }
   }, [dateOuverture]);
 
   const addEvent = (type: EventType) => {
+    if (type === 'VL_PIVOT') return; // On ne peut plus ajouter manuellement des VL pivots via ce bouton
     const newEvent: PEAEvent = {
       id: generateId(),
       type,
       date: new Date().toISOString().split('T')[0],
       montant: type === 'VERSEMENT' || type === 'RETRAIT' ? 0 : undefined,
-      vl: type === 'RETRAIT' || type === 'VL_PIVOT' ? 0 : undefined,
+      vl: type === 'RETRAIT' ? 0 : undefined,
     };
     setEvents([...events, newEvent]);
   };
@@ -87,7 +95,13 @@ export default function PEAForm() {
     setResult(res);
   };
 
-  const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const sortedEvents = [...events]
+    .filter(e => e.type !== 'VL_PIVOT')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const pivotEvents = [...events]
+    .filter(e => e.type === 'VL_PIVOT')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-8">
@@ -141,10 +155,38 @@ export default function PEAForm() {
             </div>
           </div>
 
+          {/* VL Pivots (Automatiques) */}
+          {pivotEvents.length > 0 && (
+            <div className="space-y-4 p-6 bg-blue-50/50 border border-blue-100 rounded-2xl">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wider">Valeurs Liquidatives aux dates pivots (CFONB)</h3>
+                <span className="text-[10px] text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded">REQUIS POUR HISTORIQUE</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {pivotEvents.map((event) => (
+                  <div key={event.id} className="flex flex-col gap-1">
+                    <label className="text-[11px] font-bold text-slate-500">{new Date(event.date).toLocaleDateString('fr-FR')}</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={event.vl || ""}
+                        onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
+                        placeholder="VL à date..."
+                        className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none pr-6"
+                      />
+                      <span className="absolute right-2 top-2 text-slate-400 text-xs">€</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Timeline d'événements */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800">Historique des événements</h3>
+              <h3 className="text-lg font-bold text-slate-800">Versements et Retraits passés</h3>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -160,20 +202,13 @@ export default function PEAForm() {
                 >
                   <Plus size={14} /> Retrait passé
                 </button>
-                <button
-                  type="button"
-                  onClick={() => addEvent('VL_PIVOT')}
-                  className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100 hover:bg-blue-100 transition-colors flex items-center gap-1"
-                >
-                  <Plus size={14} /> VL Pivot
-                </button>
               </div>
             </div>
 
             <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
               {sortedEvents.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-sm italic">
-                  Aucun événement enregistré. Ajoutez vos versements et retraits passés pour un calcul précis.
+                  Aucun mouvement de capital enregistré. Ajoutez vos versements initiaux et complémentaires.
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
@@ -181,10 +216,9 @@ export default function PEAForm() {
                     <div key={event.id} className="p-4 flex flex-wrap items-center gap-4 hover:bg-white transition-colors">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                         event.type === 'VERSEMENT' ? 'bg-green-100 text-green-600' : 
-                        event.type === 'RETRAIT' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                        'bg-orange-100 text-orange-600'
                       }`}>
-                        {event.type === 'VERSEMENT' ? <ArrowUpCircle size={20} /> : 
-                         event.type === 'RETRAIT' ? <ArrowDownCircle size={20} /> : <TrendingUp size={20} />}
+                        {event.type === 'VERSEMENT' ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
                       </div>
                       
                       <div className="w-32">
@@ -197,23 +231,21 @@ export default function PEAForm() {
                       </div>
 
                       <div className="flex-1 font-bold text-slate-700 text-sm">
-                        {event.type === 'VERSEMENT' ? 'VERSEMENT' : event.type === 'RETRAIT' ? 'RETRAIT PASSÉ' : 'VALEUR LIQUIDATIVE'}
+                        {event.type === 'VERSEMENT' ? 'VERSEMENT' : 'RETRAIT PASSÉ'}
                       </div>
 
                       <div className="flex gap-4 items-center">
-                        {(event.type === 'VERSEMENT' || event.type === 'RETRAIT') && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-400">Montant</span>
-                            <input
-                              type="number"
-                              value={event.montant}
-                              onChange={(e) => updateEvent(event.id, { montant: Number(e.target.value) })}
-                              className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
-                            />
-                            <span className="text-slate-400">€</span>
-                          </div>
-                        )}
-                        {(event.type === 'RETRAIT' || event.type === 'VL_PIVOT') && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] uppercase font-bold text-slate-400">Montant</span>
+                          <input
+                            type="number"
+                            value={event.montant}
+                            onChange={(e) => updateEvent(event.id, { montant: Number(e.target.value) })}
+                            className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
+                          />
+                          <span className="text-slate-400">€</span>
+                        </div>
+                        {event.type === 'RETRAIT' && (
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase font-bold text-slate-400">VL à date</span>
                             <input

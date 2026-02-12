@@ -189,6 +189,14 @@ export default function PEAForm() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
                 <TrendingUp size={16} /> VL Actuelle (EUR)
+                <div className="group relative">
+                  <Info size={14} className="text-slate-400 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed border border-slate-700">
+                    <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
+                    correspond au solde total de votre PEA (espèces + titres) à cette date.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
+                  </div>
+                </div>
               </label>
               <input
                 type="number"
@@ -219,7 +227,17 @@ export default function PEAForm() {
           {pivotEvents.length > 0 && (
             <div className="space-y-4 p-6 bg-blue-50/50 border border-blue-100 rounded-2xl">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wider">Valeurs Liquidatives aux dates pivots (CFONB)</h3>
+                <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wider flex items-center gap-2">
+                  Valeurs Liquidatives aux dates pivots (CFONB)
+                  <div className="group relative normal-case tracking-normal">
+                    <Info size={14} className="text-blue-400 cursor-help" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed border border-slate-700">
+                      <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
+                      correspond au solde total de votre PEA (espèces + titres) à cette date.
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
+                    </div>
+                  </div>
+                </h3>
                 <span className="text-[10px] text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded">REQUIS POUR HISTORIQUE</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -315,9 +333,13 @@ export default function PEAForm() {
                               VL à date
                               <div className="group relative">
                                 <Info size={12} className="text-slate-400 cursor-help" />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-tight">
-                                  Saisissez la Valeur Liquidative totale du PEA juste AVANT ce retrait pour un calcul précis du prorata capital/gains.
-                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-[11px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-tight border border-slate-700 normal-case font-normal">
+                                  <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
+                                  correspond au solde total de votre PEA (espèces + titres) à cette date.
+                                  <div className="mt-2 pt-2 border-t border-slate-700 italic text-slate-400">
+                                    Saisissez la VL juste AVANT ce retrait pour un calcul précis du prorata capital/gains.
+                                  </div>
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
                                 </div>
                               </div>
                             </span>

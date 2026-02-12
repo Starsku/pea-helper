@@ -2,15 +2,20 @@
 
 import PEAForm from "@/components/PEAForm";
 import { VersionColumn } from "@/components/VersionColumn";
+import TaxHistoryTable from "@/components/TaxHistoryTable";
+import { Zap } from "lucide-react";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-extrabold text-slate-900 mb-4">
-            PEA Helper
-          </h1>
+          <div className="inline-flex items-center justify-center gap-2 mb-4">
+            <Zap className="text-indigo-500 fill-indigo-500" size={32} />
+            <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-br from-slate-900 via-slate-700 to-indigo-600">
+              PEA Helper
+            </h1>
+          </div>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Calculateur intelligent de prélèvements sociaux avec support des <span className="font-semibold text-slate-800">taux historiques</span> et détail complet des contributions.
           </p>
@@ -24,6 +29,8 @@ export default function Home() {
             <VersionColumn />
           </div>
         </div>
+
+        <TaxHistoryTable />
         
         <footer className="mt-16 pt-8 border-t border-slate-200 text-center text-slate-400 text-sm">
           <p>© 2026 PEA Helper - Développé par FORGE</p>

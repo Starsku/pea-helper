@@ -1,7 +1,31 @@
 export const VERSION = {
-  current: '4.2.7',
+  current: '4.3.1',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.3.1',
+      date: '12/02/2026',
+      changes: [
+        'Branding : Nouveau design du titre principal "Moderne SaaS" avec dégradé et icône Zap.',
+        'Déploiement : Incrémentation forcée pour assurer la visibilité des dernières mises à jour.',
+      ]
+    },
+    {
+      version: '4.3.0',
+      date: '12/02/2026',
+      changes: [
+        'Historique Fiscal : Nouveau tableau récapitulatif des taux en bas de page.',
+        'Info-bulles : Ajout de précisions sur les termes techniques (VL, Prélèvements).',
+      ]
+    },
+    {
+      version: '4.2.8',
+      date: '12/02/2026',
+      changes: [
+        'Vulgarisation : Ajout d\'info-bulles sur le terme "VL" (Valeur Liquidative) pour plus de clarté.',
+        'Harmonisation : Validation du formatage x\'xxx.00 EUR sur l\'ensemble de l\'interface.',
+      ]
+    },
     {
       version: '4.2.7',
       date: '12/02/2026',

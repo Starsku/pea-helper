@@ -71,9 +71,9 @@ interface PDFGeneratorProps {
 }
 
 const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
-  const formatEuro = (val: number | undefined) => {
+  const formatEUR = (val: number | undefined) => {
     const s = (val || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return `[ ${s.replace(/\s/g, "'")} ]`;
+    return `[ ${s.replace(/\s/g, "'")} ] EUR`;
   };
 
   const getVLAt = (dateStr: string) => {
@@ -98,11 +98,11 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Valeur liquidative au 31/01/1996</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(getVLAt('1996-01-31'))}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(getVLAt('1996-01-31'))}</Text></View>
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Versements espérés depuis le 01/02/1996</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.capitalInitial)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.capitalInitial)}</Text></View>
           </View>
           
           <View style={{ backgroundColor: '#F9F9F9', padding: 5, borderBottomWidth: 1, marginTop: 5 }}>
@@ -110,15 +110,15 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Cumul des versements remboursés lors des retraits passés</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.cumulVersementsRembourses)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.cumulVersementsRembourses)}</Text></View>
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Cumul des bases d'imposition déterminées lors des retraits passés</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.cumulRetraitsPasses - result.cumulVersementsRembourses)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.cumulRetraitsPasses - result.cumulVersementsRembourses)}</Text></View>
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>CRDS sur retrait actuel</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.repartitionTaxes?.crds)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.repartitionTaxes?.crds)}</Text></View>
           </View>
 
           {/* CSG Section */}
@@ -127,7 +127,7 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Valeur liquidative au 31/12/1996</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(getVLAt('1996-12-31'))}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(getVLAt('1996-12-31'))}</Text></View>
           </View>
           
           <View style={{ backgroundColor: '#F9F9F9', padding: 5, borderBottomWidth: 1, marginTop: 5 }}>
@@ -135,15 +135,15 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Capital Initial (Versements)</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.capitalInitial)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.capitalInitial)}</Text></View>
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Capital Restant Net (après retraits passés)</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.capitalRestant)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.capitalRestant)}</Text></View>
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Assiette de gain du retrait actuel</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.assietteGain)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.assietteGain)}</Text></View>
           </View>
 
           {/* PS Section */}
@@ -152,24 +152,24 @@ const PEABordereauPDF = ({ result, input }: PDFGeneratorProps) => {
           </View>
           <View style={styles.tableRow}>
             <View style={styles.cellLabel}><Text style={styles.indent}>Total des prélèvements calculés sur ce retrait</Text></View>
-            <View style={styles.cellValue}><Text>{formatEuro(result.montantPS)}</Text></View>
+            <View style={styles.cellValue}><Text>{formatEUR(result.montantPS)}</Text></View>
           </View>
 
         </View>
 
         <View style={{ marginTop: 40, borderTopWidth: 1, paddingTop: 10 }}>
           <Text style={styles.bold}>SYNTHESE DU RETRAIT</Text>
-          <Text>Montant Brut du Retrait : {result.montantRetrait.toFixed(2)} €</Text>
-          <Text>Dont part de Capital (exonérée) : {(result.montantRetrait - result.assietteGain).toFixed(2)} €</Text>
-          <Text>Dont part de Gain (taxable) : {result.assietteGain.toFixed(2)} €</Text>
-          <Text>Total Contributions Sociales : {result.montantPS.toFixed(2)} €</Text>
+          <Text>Montant Brut du Retrait : {formatEUR(result.montantRetrait)}</Text>
+          <Text>Dont part de Capital (exonérée) : {formatEUR(result.montantRetrait - result.assietteGain)}</Text>
+          <Text>Dont part de Gain (taxable) : {formatEUR(result.assietteGain)}</Text>
+          <Text>Total Contributions Sociales : {formatEUR(result.montantPS)}</Text>
           <View style={{ marginTop: 10, padding: 10, backgroundColor: '#EEE' }}>
-            <Text style={[styles.bold, { fontSize: 12 }]}>NET A PERCEVOIR : {result.netVendeur.toFixed(2)} €</Text>
+            <Text style={[styles.bold, { fontSize: 12 }]}>NET A PERCEVOIR : {formatEUR(result.netVendeur)}</Text>
           </View>
         </View>
 
         <Text style={{ position: 'absolute', bottom: 30, left: 40, right: 40, fontSize: 7, textAlign: 'center', color: '#666' }}>
-          Document généré par PEA Helper v4.1.0 - Replay Chronologique de l'historique du plan avec pivots automatiques.
+          Document généré par PEA Helper v4.2.4 - Replay Chronologique de l'historique du plan avec pivots automatiques.
         </Text>
       </Page>
     </Document>

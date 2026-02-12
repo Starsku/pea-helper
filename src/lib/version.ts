@@ -1,7 +1,15 @@
 export const VERSION = {
-  current: '4.2.2',
+  current: '4.2.4',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.2.4',
+      date: '12/02/2026',
+      changes: [
+        'Harmonisation du formatage monétaire : séparateur de milliers (\') et 2 décimales.',
+        'Remplacement du symbole € par le texte EUR sur toute l\'application et le PDF.',
+      ]
+    },
     {
       version: '4.2.2',
       date: '12/02/2026',

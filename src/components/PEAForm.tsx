@@ -7,6 +7,7 @@ import { PIVOT_DATES } from "@/lib/tax-rates";
 import CalculationTransparency from "./CalculationTransparency";
 import dynamic from "next/dynamic";
 import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle, Info } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 
 // Helper simple pour générer des IDs sans dépendance externe
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -154,7 +155,7 @@ export default function PEAForm() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
-                <TrendingUp size={16} /> VL Actuelle (€)
+                <TrendingUp size={16} /> VL Actuelle (EUR)
               </label>
               <input
                 type="number"
@@ -168,7 +169,7 @@ export default function PEAForm() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
-                <ArrowDownCircle size={16} className="text-indigo-600" /> Montant Retrait Souhaité (€)
+                <ArrowDownCircle size={16} className="text-indigo-600" /> Montant Retrait Souhaité (EUR)
               </label>
               <input
                 type="number"
@@ -201,7 +202,7 @@ export default function PEAForm() {
                         placeholder="VL à date..."
                         className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none pr-6"
                       />
-                      <span className="absolute right-2 top-2 text-slate-400 text-xs">€</span>
+                      <span className="absolute right-2 top-2 text-slate-400 text-[10px] font-bold">EUR</span>
                     </div>
                   </div>
                 ))}
@@ -273,7 +274,7 @@ export default function PEAForm() {
                             onChange={(e) => updateEvent(event.id, { montant: Number(e.target.value) })}
                             className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
                           />
-                          <span className="text-slate-400">€</span>
+                          <span className="text-slate-400 text-[10px] font-bold">EUR</span>
                         </div>
                         {event.type === 'RETRAIT' && (
                           <div className="flex items-center gap-2">
@@ -293,7 +294,7 @@ export default function PEAForm() {
                               onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
                               className="w-24 p-1.5 bg-white border border-slate-200 rounded text-sm font-mono"
                             />
-                            <span className="text-slate-400">€</span>
+                            <span className="text-slate-400 text-[10px] font-bold">EUR</span>
                           </div>
                         )}
                       </div>
@@ -341,16 +342,16 @@ export default function PEAForm() {
                 <div className="space-y-5 relative z-10">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500 font-medium">Assiette taxable</span>
-                    <span className="text-lg font-bold text-slate-800">{result.assietteGain.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+                    <span className="text-lg font-bold text-slate-800">{formatCurrency(result.assietteGain)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500 font-medium text-red-600">Total Taxes (PS)</span>
-                    <span className="text-lg font-bold text-red-600">-{result.montantPS.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+                    <span className="text-lg font-bold text-red-600">-{formatCurrency(result.montantPS)}</span>
                   </div>
                   <div className="pt-5 border-t border-slate-100">
                     <div className="text-sm text-slate-400 mb-1">Net à percevoir</div>
                     <div className="text-4xl font-black text-green-600">
-                      {result.netVendeur.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                      {formatCurrency(result.netVendeur)}
                     </div>
                   </div>
                 </div>
@@ -371,14 +372,14 @@ export default function PEAForm() {
                                 style={{ width: `${(val / (result.repartitionTaxes?.total || 1)) * 100}%` }}
                               ></div>
                            </div>
-                           <span className="font-mono text-white">{val.toFixed(2)} €</span>
+                           <span className="font-mono text-white text-xs">{formatCurrency(val)}</span>
                         </div>
                       </div>
                     )
                   ))}
                   <div className="pt-4 border-t border-slate-800 flex justify-between items-center font-bold text-white">
                     <span>TOTAL</span>
-                    <span className="text-xl">{result.montantPS.toFixed(2)} €</span>
+                    <span className="text-xl">{formatCurrency(result.montantPS)}</span>
                   </div>
                 </div>
               </div>
@@ -416,13 +417,13 @@ export default function PEAForm() {
                       {result.detailsParPeriode?.map((p, i) => (
                         <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
                           <td className="py-4 font-medium text-slate-700">{p.periodLabel}</td>
-                          <td className="py-4 text-right font-mono text-slate-600">{p.gain.toFixed(2)} €</td>
+                          <td className="py-4 text-right font-mono text-slate-600 text-sm">{formatCurrency(p.gain)}</td>
                           <td className="py-4 text-right">
                             <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-500">
                               {p.rates.total}%
                             </span>
                           </td>
-                          <td className="py-4 text-right font-bold text-red-500">-{p.taxes.total.toFixed(2)} €</td>
+                          <td className="py-4 text-right font-bold text-red-500 text-sm">-{formatCurrency(p.taxes.total)}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { GainResult, PEA, PeriodDetail } from "@/lib/engine/types";
 import { ChevronDown, ChevronRight, Info, AlertCircle, History } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 
 interface CalculationTransparencyProps {
   result: GainResult;
@@ -13,8 +14,8 @@ function TaxDetailRow({ label, base, rate, amount }: { label: string; base: numb
     <div className="flex justify-between items-center py-1.5 text-xs border-b border-slate-100 last:border-0">
       <div className="text-slate-500 font-medium">{label}</div>
       <div className="flex gap-4">
-        <div className="text-slate-400">{base.toLocaleString('fr-FR')} € × {rate}%</div>
-        <div className="font-mono font-semibold text-slate-700">{amount.toFixed(2)} €</div>
+        <div className="text-slate-400">{formatCurrency(base)} × {rate}%</div>
+        <div className="font-mono font-semibold text-slate-700">{formatCurrency(amount)}</div>
       </div>
     </div>
   );
@@ -35,11 +36,11 @@ function CollapsiblePeriodRow({ period }: { period: PeriodDetail }) {
           </div>
           <div className="text-left">
             <div className="text-sm font-bold text-slate-700">{period.periodLabel}</div>
-            <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Assiette : {period.gain.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</div>
+            <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Assiette : {formatCurrency(period.gain)}</div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm font-black text-red-500">-{period.taxes.total.toFixed(2)} €</div>
+          <div className="text-sm font-black text-red-500">-{formatCurrency(period.taxes.total)}</div>
           <div className="text-[10px] text-slate-400 font-bold">{period.rates.total}%</div>
         </div>
       </button>
@@ -88,15 +89,15 @@ export default function CalculationTransparency({ result }: CalculationTranspare
           <div className="space-y-3">
             <div className="flex justify-between p-3 bg-slate-50 rounded-xl">
               <span className="text-sm text-slate-500">Cumul versements historiques</span>
-              <span className="text-sm font-bold text-slate-800">{result.capitalInitial.toLocaleString('fr-FR')} €</span>
+              <span className="text-sm font-bold text-slate-800">{formatCurrency(result.capitalInitial)}</span>
             </div>
             <div className="flex justify-between p-3 bg-slate-50 rounded-xl">
               <span className="text-sm text-slate-500">Capital déjà remboursé (retraits passés)</span>
-              <span className="text-sm font-bold text-orange-600">-{result.cumulVersementsRembourses.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+              <span className="text-sm font-bold text-orange-600">-{formatCurrency(result.cumulVersementsRembourses)}</span>
             </div>
             <div className="flex justify-between p-4 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100">
               <span className="text-sm font-bold">Capital Restant Net (non taxable)</span>
-              <span className="text-lg font-black">{result.capitalRestant.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+              <span className="text-lg font-black">{formatCurrency(result.capitalRestant)}</span>
             </div>
           </div>
         </div>
@@ -110,23 +111,23 @@ export default function CalculationTransparency({ result }: CalculationTranspare
           <div className="flex flex-wrap justify-center items-center gap-4 text-center">
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 min-w-[140px]">
               <div className="text-[10px] font-black text-slate-400 uppercase mb-1">Montant Retrait</div>
-              <div className="text-xl font-bold text-slate-800">{result.montantRetrait.toLocaleString('fr-FR')} €</div>
+              <div className="text-xl font-bold text-slate-800">{formatCurrency(result.montantRetrait)}</div>
             </div>
             <div className="text-2xl text-slate-300">−</div>
             <div className="p-4 bg-green-50 rounded-2xl border border-green-200 min-w-[140px]">
               <div className="text-[10px] font-black text-green-600 uppercase mb-1">Part Capital (Prorata)</div>
-              <div className="text-xl font-bold text-green-700">{(result.montantRetrait - result.assietteGain).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</div>
+              <div className="text-xl font-bold text-green-700">{formatCurrency(result.montantRetrait - result.assietteGain)}</div>
             </div>
             <div className="text-2xl text-slate-300">=</div>
             <div className="p-6 bg-indigo-600 rounded-2xl text-white shadow-xl min-w-[180px] scale-110 border-4 border-indigo-100">
               <div className="text-xs font-black uppercase mb-1 opacity-80">Assiette Taxable</div>
-              <div className="text-2xl font-black">{result.assietteGain.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</div>
+              <div className="text-2xl font-black">{formatCurrency(result.assietteGain)}</div>
             </div>
           </div>
           
           <p className="text-xs text-slate-400 italic max-w-lg text-center leading-relaxed">
             La part de capital est calculée selon le ratio : <code>Retrait × (Capital Restant / VL Totale)</code>. 
-            Ici, la VL Totale est de {(result.gainTotal + result.capitalRestant).toLocaleString('fr-FR')} €.
+            Ici, la VL Totale est de {formatCurrency(result.gainTotal + result.capitalRestant)}.
           </p>
         </div>
       </section>

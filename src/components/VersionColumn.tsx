@@ -13,7 +13,7 @@ export function VersionColumn() {
         </span>
       </div>
 
-      <div className="space-y-8 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="space-y-8 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
         {VERSION.changelog.map((entry, idx) => (
           <div key={entry.version} className="relative pl-6 border-l-2 border-slate-100 last:border-0 pb-2">
             {/* Dot */}

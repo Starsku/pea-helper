@@ -6,7 +6,7 @@ import { GainResult, PEAEvent, EventType } from "@/lib/engine/types";
 import { PIVOT_DATES } from "@/lib/tax-rates";
 import CalculationTransparency from "./CalculationTransparency";
 import dynamic from "next/dynamic";
-import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle, Info } from "lucide-react";
 
 // Helper simple pour générer des IDs sans dépendance externe
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -22,7 +22,18 @@ export default function PEAForm() {
   const [vlTotale, setVlTotale] = useState("");
   const [montantRetraitActuel, setMontantRetraitActuel] = useState("");
   const [events, setEvents] = useState<PEAEvent[]>([]);
+  const [isSortingEnabled, setIsSortingEnabled] = useState(true);
   const [result, setResult] = useState<GainResult | null>(null);
+
+  // Re-enable sorting after a delay of inactivity
+  useEffect(() => {
+    if (!isSortingEnabled) {
+      const timer = setTimeout(() => {
+        setIsSortingEnabled(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSortingEnabled, events]);
 
   // Initialisation auto des VL Pivots quand la date d'ouverture change
   useEffect(() => {
@@ -95,14 +106,16 @@ export default function PEAForm() {
     setResult(res);
   };
 
-  const sortedEvents = [...events]
-    .filter(e => e.type !== 'VL_PIVOT')
-    .sort((a, b) => {
-      const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
-      if (dateCompare !== 0) return dateCompare;
-      // Stabilité du tri si dates identiques
-      return a.id.localeCompare(b.id);
-    });
+  const sortedEvents = isSortingEnabled 
+    ? [...events]
+        .filter(e => e.type !== 'VL_PIVOT')
+        .sort((a, b) => {
+          const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+          if (dateCompare !== 0) return dateCompare;
+          // Stabilité du tri si dates identiques
+          return a.id.localeCompare(b.id);
+        })
+    : [...events].filter(e => e.type !== 'VL_PIVOT');
 
   const pivotEvents = [...events]
     .filter(e => e.type === 'VL_PIVOT')
@@ -238,7 +251,11 @@ export default function PEAForm() {
                         <input
                           type="date"
                           value={event.date}
-                          onChange={(e) => updateEvent(event.id, { date: e.target.value })}
+                          onChange={(e) => {
+                            setIsSortingEnabled(false);
+                            updateEvent(event.id, { date: e.target.value });
+                          }}
+                          onBlur={() => setIsSortingEnabled(true)}
                           className="w-full bg-transparent border-none text-sm font-medium focus:ring-0 p-0"
                         />
                       </div>
@@ -260,7 +277,16 @@ export default function PEAForm() {
                         </div>
                         {event.type === 'RETRAIT' && (
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-400">VL à date</span>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                              VL à date
+                              <div className="group relative">
+                                <Info size={12} className="text-slate-400 cursor-help" />
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-tight">
+                                  Saisissez la Valeur Liquidative totale du PEA juste AVANT ce retrait pour un calcul précis du prorata capital/gains.
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                                </div>
+                              </div>
+                            </span>
                             <input
                               type="number"
                               value={event.vl}

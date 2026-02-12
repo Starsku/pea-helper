@@ -1,7 +1,15 @@
 export const VERSION = {
-  current: '4.2.0',
+  current: '4.2.2',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.2.2',
+      date: '12/02/2026',
+      changes: [
+        'Réintégration de l\'historique complet (v1.0.0 à v2.x.x).',
+        'Amélioration de la visibilité du changelog (scrolling infini).',
+      ]
+    },
     {
       version: '4.2.0',
       date: '12/02/2026',
@@ -69,6 +77,33 @@ export const VERSION = {
         'Génération et téléchargement du bordereau PDF',
         'Section "Comment ce résultat a été calculé ?" avec détails pas à pas',
         'Affichage transparent de la logique de calcul'
+      ]
+    },
+    {
+      version: '2.x.x',
+      date: '11/02/2026',
+      changes: [
+        'Correction du taux 2026 (18.6%) suite aux annonces budgétaires.',
+        'Ajout de la transparence des calculs (première ébauche).',
+        'Amélioration de la précision du moteur de strates.'
+      ]
+    },
+    {
+      version: '2.0.0',
+      date: '10/02/2026',
+      changes: [
+        'Introduction des taux historiques de prélèvements sociaux (1996-2025).',
+        'Moteur de calcul par strates (méthode de la balance de capitaux).',
+        'Gestion des périodes de taux proportionnellement à la durée de détention.'
+      ]
+    },
+    {
+      version: '1.0.0',
+      date: '08/02/2026',
+      changes: [
+        'Calculateur de base PEA.',
+        'Application de la Flat Tax à 17.2%.',
+        'Interface minimaliste de saisie.'
       ]
     }
   ]

@@ -4,7 +4,8 @@ Application Next.js 15 pour calculer les prélèvements sociaux sur les retraits
 
 ## Fonctionnalités (V1)
 - Calcul du gain imposable au prorata du retrait.
-- Application du taux fixe de **17.2%** (Flat Tax / Cas simple).
+- Application du taux fixe de **18.6%** (Flat Tax depuis 2026 / Cas simple).
+- Gestion des taux historiques pour les PEA ouverts avant 2026.
 - Utilisation de `big.js` pour la précision monétaire.
 
 ## Stack Technique
@@ -26,7 +27,7 @@ npm run dev
 ## Formule utilisée
 ```
 Gain Brut = Montant Retrait × (VL Totale - Total Versements) / VL Totale
-Prélèvements Sociaux = Gain Brut × 17.2%
+Prélèvements Sociaux = Gain Brut × 18.6%
 Net versé = Montant Retrait - Prélèvements Sociaux
 ```
 

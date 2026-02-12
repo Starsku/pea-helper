@@ -1,7 +1,16 @@
 export const VERSION = {
-  current: '3.1.0',
+  current: '3.2.0',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '3.2.0',
+      date: '12/02/2026',
+      changes: [
+        'Ajout du drill-down dans les détails de calcul',
+        'Visualisation détaillée par contribution (CSG, CRDS, PS, etc.) pour chaque période',
+        'Amélioration de l\'interface des étapes de calcul'
+      ]
+    },
     {
       version: '3.1.0',
       date: '12/02/2026',

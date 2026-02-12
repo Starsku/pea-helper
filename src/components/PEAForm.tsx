@@ -31,7 +31,7 @@ export default function PEAForm() {
       const openDate = new Date(dateOuverture);
       const relevantPivots = PIVOT_DATES
         .filter(d => d > openDate)
-        .sort((a, b) => a.getTime() - b.getTime()) // Sort chronological
+        .sort((a, b) => a.getTime() - b.getTime()) // Chronological: oldest to newest
         .map(d => ({
           date: d.toISOString().split('T')[0],
           vl: Number(totalVersements) || 0 // Valeur par défaut

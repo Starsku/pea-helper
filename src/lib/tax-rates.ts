@@ -100,13 +100,14 @@ export const HISTORICAL_TAX_RATES: TaxPeriod[] = [
  * pour appliquer les taux historiques.
  */
 export const PIVOT_DATES = [
-  new Date('2025-12-31'),
-  new Date('2017-12-31'),
-  new Date('2012-12-31'),
-  new Date('2010-12-31'),
-  new Date('2008-12-31'),
-  new Date('2004-12-31'),
-  new Date('2004-06-30'),
+  new Date('1996-01-31'),
+  new Date('1996-12-31'),
   new Date('1997-12-31'),
-  new Date('1996-12-31')
+  new Date('2004-06-30'),
+  new Date('2004-12-31'),
+  new Date('2008-12-31'),
+  new Date('2010-12-31'),
+  new Date('2012-12-31'),
+  new Date('2017-12-31'),
+  new Date('2025-12-31')
 ];

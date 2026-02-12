@@ -26,6 +26,7 @@ export function calculatePEAGain(pea: PEA, retraitActuelMontant: number): GainRe
   let capitalRestant = new Big(0);
   let cumulVersementsRembourses = new Big(0);
   let cumulRetraitsPasses = new Big(0);
+  const retraitsPassesDetails: any[] = [];
 
   // On suit le "stock" de gains par période fiscale
   // Map<PeriodLabel, BigValue>
@@ -87,9 +88,25 @@ export function calculatePEAGain(pea: PEA, retraitActuelMontant: number): GainRe
 
       // Le gain consommé par ce retrait doit être déduit des stocks de gains par période
       const gainConsomme = m.minus(partCapital);
+      let retraitTaxes = new Big(0);
+      let retraitDetailsParPeriode: PeriodDetail[] = [];
+
       if (gainConsomme.gt(0)) {
+        const results = calculateTaxesFromStocks(gainConsomme, gainsParPeriodeMap);
+        retraitTaxes = results.totalTaxes;
+        retraitDetailsParPeriode = results.details;
         consumeGains(gainConsomme, gainsParPeriodeMap);
       }
+
+      retraitsPassesDetails.push({
+        id: event.id,
+        date: event.date,
+        montant: m.toNumber(),
+        assietteGain: gainConsomme.toNumber(),
+        partCapital: partCapital.toNumber(),
+        taxes: retraitTaxes.toNumber(),
+        detailsParPeriode: retraitDetailsParPeriode
+      });
 
       lastVL = currentVL.minus(m);
     }
@@ -131,7 +148,8 @@ export function calculatePEAGain(pea: PEA, retraitActuelMontant: number): GainRe
     capitalInitial: cumulVersements.toNumber(),
     capitalRestant: capitalRestant.toNumber(),
     cumulVersementsRembourses: cumulVersementsRembourses.toNumber(),
-    cumulRetraitsPasses: cumulRetraitsPasses.toNumber()
+    cumulRetraitsPasses: cumulRetraitsPasses.toNumber(),
+    retraitsPassesDetails: retraitsPassesDetails
   };
 }
 

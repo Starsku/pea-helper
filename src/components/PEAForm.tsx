@@ -5,6 +5,7 @@ import { calculatePEAGain } from "@/lib/pea-engine";
 import { GainResult, PEAEvent, EventType } from "@/lib/engine/types";
 import { PIVOT_DATES } from "@/lib/tax-rates";
 import CalculationTransparency from "./CalculationTransparency";
+import PastWithdrawalsTable from "./PastWithdrawalsTable";
 import dynamic from "next/dynamic";
 import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle, Info } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
@@ -490,6 +491,10 @@ export default function PEAForm() {
               </div>
 
               <CalculationTransparency result={result} />
+              
+              {result.retraitsPassesDetails && result.retraitsPassesDetails.length > 0 && (
+                <PastWithdrawalsTable retraits={result.retraitsPassesDetails} />
+              )}
             </div>
           </div>
         </div>

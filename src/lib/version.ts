@@ -1,7 +1,16 @@
 export const VERSION = {
-  current: '4.3.1',
+  current: '4.4.0',
   date: '12/02/2026',
   changelog: [
+    {
+      version: '4.4.0',
+      date: '12/02/2026',
+      changes: [
+        'Détail des retraits passés : Nouvelle table interactive affichant le détail fiscal de chaque retrait historique.',
+        'Accordion UI : Lignes dépliables avec chevrons Lucide pour explorer la décomposition par strate fiscale de chaque retrait.',
+        'Replay moteur : Utilisation de la simulation chronologique pour isoler les taxes payées sur le passé.',
+      ]
+    },
     {
       version: '4.3.1',
       date: '12/02/2026',

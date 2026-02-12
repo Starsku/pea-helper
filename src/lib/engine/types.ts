@@ -29,6 +29,16 @@ export interface PeriodDetail {
   taxes: TaxRates;
 }
 
+export interface RetraitDetail {
+  id: string;
+  date: string;
+  montant: number;
+  assietteGain: number;
+  partCapital: number;
+  taxes: number;
+  detailsParPeriode: PeriodDetail[];
+}
+
 export interface GainResult {
   montantRetrait: number;
   gainTotal: number;
@@ -46,4 +56,7 @@ export interface GainResult {
   capitalRestant: number;
   cumulVersementsRembourses: number;
   cumulRetraitsPasses: number;
+  
+  // Nouveaux champs pour v4.4.0
+  retraitsPassesDetails?: RetraitDetail[];
 }

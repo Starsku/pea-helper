@@ -7,8 +7,9 @@ import { PIVOT_DATES } from "@/lib/tax-rates";
 import CalculationTransparency from "./CalculationTransparency";
 import PastWithdrawalsTable from "./PastWithdrawalsTable";
 import dynamic from "next/dynamic";
-import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle, Info } from "lucide-react";
+import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle, Info, RefreshCw, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Helper simple pour générer des IDs sans dépendance externe
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -16,7 +17,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 // Import dynamique pour éviter les erreurs SSR avec react-pdf
 const PDFDownloadButton = dynamic(() => import("./PDFDownloadButton"), { 
   ssr: false,
-  loading: () => <div className="animate-pulse h-10 bg-slate-200 rounded-lg w-full"></div>
+  loading: () => <div className="animate-pulse h-12 bg-slate-100 rounded-xl w-full"></div>
 });
 
 export default function PEAForm() {
@@ -73,7 +74,7 @@ export default function PEAForm() {
   }, [dateOuverture]);
 
   const addEvent = (type: EventType) => {
-    if (type === 'VL_PIVOT') return; // On ne peut plus ajouter manuellement des VL pivots via ce bouton
+    if (type === 'VL_PIVOT') return;
     const newEvent: PEAEvent = {
       id: generateId(),
       type,
@@ -89,7 +90,7 @@ export default function PEAForm() {
   };
 
   const removeEvent = (id: string) => {
-    if (id === 'initial-deposit') return; // Interdire la suppression du versement initial
+    if (id === 'initial-deposit') return;
     setEvents(events.filter(e => e.id !== id));
   };
 
@@ -105,13 +106,11 @@ export default function PEAForm() {
     if (!dateOuverture || !vlTotale || !montantRetraitActuel) return false;
     if (Number(vlTotale) <= 0 || Number(montantRetraitActuel) <= 0) return false;
     
-    // Vérifier les VL Pivots
     const pivots = events.filter(e => e.type === 'VL_PIVOT');
     if (pivots.some(p => !p.vl || p.vl <= 0)) return false;
 
-    // Vérifier les événements (Versements / Retraits)
     const movements = events.filter(e => e.type !== 'VL_PIVOT');
-    if (movements.length === 0) return false; // Au moins le versement initial
+    if (movements.length === 0) return false;
     
     for (const event of movements) {
       if (!event.date) return false;
@@ -126,7 +125,6 @@ export default function PEAForm() {
     e.preventDefault();
     if (!isFormValid()) return;
     
-    // Total des versements pour compatibilité et validation simple
     const totalVersements = events
       .filter(e => e.type === 'VERSEMENT')
       .reduce((acc, e) => acc + (e.montant || 0), 0);
@@ -147,7 +145,6 @@ export default function PEAForm() {
         .sort((a, b) => {
           const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
           if (dateCompare !== 0) return dateCompare;
-          // Stabilité du tri si dates identiques
           return a.id.localeCompare(b.id);
         })
     : [...events].filter(e => e.type !== 'VL_PIVOT');
@@ -157,12 +154,15 @@ export default function PEAForm() {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-8">
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-100">
-        <h2 className="text-2xl font-bold mb-8 text-slate-900 flex items-center gap-2">
-          <div className="w-2 h-8 bg-indigo-600 rounded-full"></div>
-          Configuration du PEA
-        </h2>
+    <div className="space-y-12">
+      <div className="bg-white p-8 md:p-10 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+        <div className="flex items-center gap-4 mb-10">
+          <div className="w-1.5 h-10 bg-indigo-600 rounded-full"></div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Configuration</h2>
+            <p className="text-sm text-slate-400 font-medium">Paramètres de votre plan d'épargne</p>
+          </div>
+        </div>
         
         <form 
           onSubmit={handleCalculate} 
@@ -171,31 +171,31 @@ export default function PEAForm() {
               e.preventDefault();
             }
           }}
-          className="space-y-10"
+          className="space-y-12"
         >
           {/* Infos de base */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
-                <Calendar size={16} /> Date d'Ouverture
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Calendar size={14} className="text-slate-300" /> Date d'Ouverture
               </label>
               <input
                 type="date"
                 value={dateOuverture}
                 onChange={(e) => setDateOuverture(e.target.value)}
-                className={`w-full p-3 bg-slate-50 border ${!dateOuverture ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none`}
+                className={`w-full p-4 bg-slate-50/50 border ${!dateOuverture ? 'border-red-200' : 'border-slate-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all outline-none font-medium text-slate-700`}
                 required
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
-                <TrendingUp size={16} /> VL Actuelle (EUR)
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <TrendingUp size={14} className="text-slate-300" /> VL Actuelle <span className="text-[10px] text-slate-300 font-normal">(EUR)</span>
                 <div className="group relative">
-                  <Info size={14} className="text-slate-400 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center leading-relaxed border border-slate-700 whitespace-normal">
-                    <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
-                    correspond au solde total de votre PEA (espèces + titres) à cette date.
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
+                  <Info size={14} className="text-slate-200 cursor-help hover:text-indigo-400 transition-colors" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-slate-900 text-white text-xs rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-[100] text-center leading-relaxed border border-slate-800 translate-y-2 group-hover:translate-y-0">
+                    <span className="font-bold text-indigo-400 block mb-1">Valeur Liquidative</span>
+                    Le solde total de votre PEA (espèces + titres) à ce jour.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                   </div>
                 </div>
               </label>
@@ -204,301 +204,350 @@ export default function PEAForm() {
                 step="0.01"
                 value={vlTotale}
                 onChange={(e) => setVlTotale(e.target.value)}
-                placeholder="Ex: 12500.50"
-                className={`w-full p-3 bg-slate-50 border ${!vlTotale || Number(vlTotale) <= 0 ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none`}
+                placeholder="0.00"
+                className={`w-full p-4 bg-slate-50/50 border ${!vlTotale || Number(vlTotale) <= 0 ? 'border-red-200' : 'border-slate-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all outline-none font-medium text-slate-700`}
                 required
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-600 flex items-center gap-2">
-                <ArrowDownCircle size={16} className="text-indigo-600" /> Montant Retrait Souhaité (EUR)
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                <ArrowDownCircle size={14} /> Retrait Souhaité <span className="text-[10px] text-indigo-300 font-normal">(EUR)</span>
               </label>
               <input
                 type="number"
                 step="0.01"
                 value={montantRetraitActuel}
                 onChange={(e) => setMontantRetraitActuel(e.target.value)}
-                className={`w-full p-3 bg-indigo-50 border ${!montantRetraitActuel || Number(montantRetraitActuel) <= 0 ? 'border-red-300 bg-red-50' : 'border-indigo-100'} rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-bold text-indigo-900`}
+                placeholder="0.00"
+                className={`w-full p-4 bg-indigo-50/30 border ${!montantRetraitActuel || Number(montantRetraitActuel) <= 0 ? 'border-red-200' : 'border-indigo-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-indigo-600 placeholder:text-indigo-200`}
                 required
               />
             </div>
           </div>
 
           {/* VL Pivots (Automatiques) */}
-          {pivotEvents.length > 0 && (
-            <div className="space-y-4 p-6 bg-blue-50/50 border border-blue-100 rounded-2xl">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wider flex items-center gap-2">
-                  Valeurs Liquidatives aux dates pivots (CFONB)
-                  <div className="group relative normal-case tracking-normal">
-                    <Info size={14} className="text-blue-400 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center leading-relaxed border border-slate-700 whitespace-normal">
-                      <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
-                      correspond au solde total de votre PEA (espèces + titres) à cette date.
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
+          <AnimatePresence>
+            {pivotEvents.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-6 p-8 bg-slate-50/30 border border-slate-100 rounded-[24px]"
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    Historique des VL aux dates pivots
+                    <div className="group relative normal-case tracking-normal">
+                      <Info size={14} className="text-slate-300 cursor-help" />
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-slate-900 text-white text-xs rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-[100] text-center leading-relaxed border border-slate-800 translate-y-2 group-hover:translate-y-0">
+                        <span className="font-bold text-indigo-400 block mb-1 text-left">Prorata Temporis</span>
+                        Pour appliquer les bons taux historiques, la banque doit connaître la VL du PEA à chaque changement de taux (2011, 2012, 2013, 2017).
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
+                      </div>
                     </div>
-                  </div>
-                </h3>
-                <span className="text-[10px] text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded">REQUIS POUR HISTORIQUE</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {pivotEvents.map((event) => (
-                  <div key={event.id} className="flex flex-col gap-1">
-                    <label className="text-[11px] font-bold text-slate-500">{new Date(event.date).toLocaleDateString('fr-FR')}</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={event.vl || ""}
-                        onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
-                        placeholder="VL à date..."
-                        className={`w-full p-2 bg-white border ${!event.vl || event.vl <= 0 ? 'border-red-300 bg-red-50' : 'border-blue-200'} rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none pr-6`}
-                      />
-                      <span className="absolute right-2 top-2 text-slate-400 text-[10px] font-bold">EUR</span>
+                  </h3>
+                  <span className="text-[10px] text-indigo-500 font-bold px-2.5 py-1 bg-indigo-50 rounded-lg">CALCUL CFONB</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {pivotEvents.map((event) => (
+                    <div key={event.id} className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-500 ml-1">{new Date(event.date).toLocaleDateString('fr-FR')}</label>
+                      <div className="relative group">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={event.vl || ""}
+                          onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
+                          placeholder="0.00"
+                          className={`w-full p-3.5 bg-white border ${!event.vl || event.vl <= 0 ? 'border-red-200' : 'border-slate-200'} rounded-xl text-sm font-semibold text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all pr-12`}
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 text-[10px] font-bold">EUR</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Timeline d'événements */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800">Versements et Retraits passés</h3>
-              <div className="flex gap-2">
+          <div className="space-y-6">
+            <div className="flex justify-between items-end px-2">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Mouvements de capital</h3>
+                <p className="text-sm text-slate-400 font-medium">Flux historiques enregistrés</p>
+              </div>
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => addEvent('VERSEMENT')}
-                  className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-bold border border-green-100 hover:bg-green-100 transition-colors flex items-center gap-1"
+                  className="px-4 py-2.5 bg-white text-emerald-600 rounded-xl text-xs font-bold border border-emerald-100 hover:bg-emerald-50 hover:border-emerald-200 transition-all flex items-center gap-2 shadow-sm"
                 >
                   <Plus size={14} /> Versement
                 </button>
                 <button
                   type="button"
                   onClick={() => addEvent('RETRAIT')}
-                  className="px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-xs font-bold border border-orange-100 hover:bg-orange-100 transition-colors flex items-center gap-1"
+                  className="px-4 py-2.5 bg-white text-orange-600 rounded-xl text-xs font-bold border border-orange-100 hover:bg-orange-50 hover:border-orange-200 transition-all flex items-center gap-2 shadow-sm"
                 >
                   <Plus size={14} /> Retrait passé
                 </button>
               </div>
             </div>
 
-            <div className="border border-slate-100 rounded-2xl overflow-visible bg-slate-50/50">
-              {sortedEvents.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-sm italic">
-                  Aucun mouvement de capital enregistré. Ajoutez vos versements initiaux et complémentaires.
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {sortedEvents.map((event) => (
-                    <div key={event.id} className="p-4 flex flex-wrap items-center gap-4 hover:bg-white transition-colors">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                        event.type === 'VERSEMENT' ? 'bg-green-100 text-green-600' : 
-                        'bg-orange-100 text-orange-600'
-                      }`}>
-                        {event.type === 'VERSEMENT' ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
-                      </div>
-                      
-                      <div className="w-32">
-                        <input
-                          type="date"
-                          value={event.date}
-                          onChange={(e) => {
-                            setIsSortingEnabled(false);
-                            updateEvent(event.id, { date: e.target.value });
-                          }}
-                          onBlur={() => setIsSortingEnabled(true)}
-                          className="w-full bg-transparent border-none text-sm font-medium focus:ring-0 p-0"
-                        />
-                      </div>
-
-                      <div className="flex-1 font-bold text-slate-700 text-sm">
-                        {event.type === 'VERSEMENT' ? 'VERSEMENT' : 'RETRAIT PASSÉ'}
-                      </div>
-
-                      <div className="flex gap-4 items-center">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] uppercase font-bold text-slate-400">Montant</span>
-                          <input
-                            type="number"
-                            value={event.montant}
-                            onChange={(e) => updateEvent(event.id, { montant: Number(e.target.value) })}
-                            className={`w-24 p-1.5 bg-white border ${!event.montant || event.montant <= 0 ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded text-sm font-mono`}
-                          />
-                          <span className="text-slate-400 text-[10px] font-bold">EUR</span>
+            <div className="border border-slate-100 rounded-[24px] overflow-hidden bg-white shadow-sm">
+              <div className="bg-slate-50/50 px-6 py-4 flex items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                <div className="w-12">Type</div>
+                <div className="w-32 ml-4">Date</div>
+                <div className="flex-1 ml-4">Désignation</div>
+                <div className="w-64 text-right">Montants (EUR)</div>
+                <div className="w-12 text-right"></div>
+              </div>
+              
+              <div className="divide-y divide-slate-100">
+                <AnimatePresence initial={false}>
+                  {sortedEvents.length === 0 ? (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="p-12 text-center"
+                    >
+                      <p className="text-slate-400 text-sm font-medium italic">Aucun mouvement enregistré.</p>
+                    </motion.div>
+                  ) : (
+                    sortedEvents.map((event) => (
+                      <motion.div 
+                        key={event.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="px-6 py-5 flex items-center hover:bg-slate-50/30 transition-colors group"
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+                          event.type === 'VERSEMENT' ? 'bg-emerald-50 text-emerald-600' : 
+                          'bg-orange-50 text-orange-600'
+                        }`}>
+                          {event.type === 'VERSEMENT' ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
                         </div>
-                        {event.type === 'RETRAIT' && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
-                              VL à date
-                              <div className="group relative">
-                                <Info size={12} className="text-slate-400 cursor-help" />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-[11px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center leading-tight border border-slate-700 normal-case font-normal whitespace-normal overflow-visible">
-                                  <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
-                                  correspond au solde total de votre PEA (espèces + titres) à cette date.
-                                  <div className="mt-2 pt-2 border-t border-slate-700 italic text-slate-400">
-                                    Saisissez la VL juste AVANT ce retrait pour un calcul précis du prorata capital/gains.
-                                  </div>
-                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
-                                </div>
-                              </div>
-                            </span>
+                        
+                        <div className="w-32 ml-4">
+                          <input
+                            type="date"
+                            value={event.date}
+                            onChange={(e) => {
+                              setIsSortingEnabled(false);
+                              updateEvent(event.id, { date: e.target.value });
+                            }}
+                            onBlur={() => setIsSortingEnabled(true)}
+                            className="w-full bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 p-0 cursor-pointer hover:text-indigo-600 transition-colors"
+                          />
+                        </div>
+
+                        <div className="flex-1 ml-4 font-bold text-slate-900 text-sm">
+                          {event.id === 'initial-deposit' ? 'Versement initial' : (event.type === 'VERSEMENT' ? 'Complément' : 'Retrait partiel')}
+                        </div>
+
+                        <div className="flex gap-6 items-center w-64 justify-end">
+                          <div className="relative">
                             <input
                               type="number"
-                              value={event.vl}
-                              onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
-                              className={`w-24 p-1.5 bg-white border ${!event.vl || event.vl <= 0 ? 'border-red-300 bg-red-50' : 'border-slate-200'} rounded text-sm font-mono`}
+                              value={event.montant}
+                              onChange={(e) => updateEvent(event.id, { montant: Number(e.target.value) })}
+                              className={`w-28 p-2 bg-slate-50/50 border ${!event.montant || event.montant <= 0 ? 'border-red-200' : 'border-slate-100'} rounded-lg text-sm font-bold text-slate-700 text-right focus:bg-white transition-all`}
                             />
-                            <span className="text-slate-400 text-[10px] font-bold">EUR</span>
                           </div>
-                        )}
-                      </div>
+                          {event.type === 'RETRAIT' && (
+                            <div className="relative group/vl">
+                              <input
+                                type="number"
+                                value={event.vl}
+                                onChange={(e) => updateEvent(event.id, { vl: Number(e.target.value) })}
+                                placeholder="VL"
+                                className={`w-24 p-2 bg-slate-50/50 border ${!event.vl || event.vl <= 0 ? 'border-red-200' : 'border-slate-100'} rounded-lg text-sm font-bold text-slate-700 text-right focus:bg-white transition-all`}
+                              />
+                              <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/vl:opacity-100 transition-opacity pointer-events-none">
+                                <span className="bg-slate-900 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap">VL avant retrait</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
-                      <button
-                        type="button"
-                        onClick={() => removeEvent(event.id)}
-                        disabled={event.id === 'initial-deposit'}
-                        className={`p-2 transition-colors ${event.id === 'initial-deposit' ? 'text-slate-100 cursor-not-allowed' : 'text-slate-300 hover:text-red-500'}`}
-                        title={event.id === 'initial-deposit' ? "Le versement initial ne peut pas être supprimé" : "Supprimer"}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                        <div className="w-12 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => removeEvent(event.id)}
+                            disabled={event.id === 'initial-deposit'}
+                            className={`p-2 transition-all rounded-lg ${event.id === 'initial-deposit' ? 'text-slate-100' : 'text-slate-300 hover:text-red-500 hover:bg-red-50'}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4 pt-4">
             <button
               type="submit"
               disabled={!isFormValid()}
-              className="flex-1 py-4 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-white text-lg font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 hover:-translate-y-0.5"
+              className="group relative flex-[2] overflow-hidden py-5 px-8 bg-slate-900 hover:bg-black disabled:bg-slate-200 disabled:cursor-not-allowed text-white text-lg font-bold rounded-[20px] transition-all shadow-xl shadow-slate-200 hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              Lancer la simulation chronologique
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+              <div className="relative flex items-center justify-center gap-3">
+                Calculer le retrait
+                <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </div>
             </button>
             <button
               type="button"
               onClick={handleReset}
-              className="py-4 px-8 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-2xl transition-all border border-slate-200"
+              className="flex-1 py-5 px-8 bg-white hover:bg-slate-50 text-slate-500 font-bold rounded-[20px] transition-all border border-slate-100 flex items-center justify-center gap-2 group"
             >
-              Réinitialiser
+              <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+              Reset
             </button>
           </div>
         </form>
       </div>
 
-      {result && (
-        <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Résumé Principal */}
-            <div className="lg:col-span-1 space-y-8">
-              <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-bl-full -mr-16 -mt-16 z-0"></div>
-                <h3 className="text-xl font-bold mb-6 relative z-10">Bilan du retrait</h3>
-                <div className="space-y-5 relative z-10">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium">Assiette taxable</span>
-                    <span className="text-lg font-bold text-slate-800">{formatCurrency(result.assietteGain)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium text-red-600">Total Taxes (PS)</span>
-                    <span className="text-lg font-bold text-red-600">-{formatCurrency(result.montantPS)}</span>
-                  </div>
-                  <div className="pt-5 border-t border-slate-100">
-                    <div className="text-sm text-slate-400 mb-1">Net à percevoir</div>
-                    <div className="text-4xl font-black text-green-600">
-                      {formatCurrency(result.netVendeur)}
+      <AnimatePresence>
+        {result && (
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-12"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Résumé Principal */}
+              <div className="lg:col-span-1 space-y-8">
+                <div className="bg-white p-10 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50/50 rounded-bl-[100px] -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"></div>
+                  
+                  <h3 className="text-xl font-bold mb-8 text-slate-900 relative z-10 flex items-center gap-3">
+                    Bilan du retrait
+                  </h3>
+                  
+                  <div className="space-y-6 relative z-10">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Assiette taxable</span>
+                      <span className="text-xl font-bold text-slate-800">{formatCurrency(result.assietteGain)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-red-400 uppercase tracking-widest">Total Taxes</span>
+                      <span className="text-xl font-bold text-red-500">-{formatCurrency(result.montantPS)}</span>
+                    </div>
+                    
+                    <div className="pt-8 border-t border-slate-50">
+                      <div className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em] mb-2">Net à percevoir</div>
+                      <div className="text-5xl font-black text-emerald-500 tracking-tight">
+                        {formatCurrency(result.netVendeur)}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Détail Technique */}
-              <div className="bg-slate-900 text-slate-300 p-8 rounded-3xl shadow-xl">
-                <h3 className="text-xs font-black uppercase tracking-widest text-indigo-400 mb-6">Répartition Fiscalité</h3>
-                <div className="space-y-4">
-                  {Object.entries(result.repartitionTaxes || {}).map(([key, val]) => (
-                    val > 0 && key !== 'total' && (
-                      <div key={key} className="flex justify-between items-center">
-                        <span className="text-sm font-bold uppercase">{key}</span>
-                        <div className="flex items-center gap-3">
-                           <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-indigo-500" 
-                                style={{ width: `${(val / (result.repartitionTaxes?.total || 1)) * 100}%` }}
-                              ></div>
-                           </div>
-                           <span className="font-mono text-white text-xs">{formatCurrency(val)}</span>
+                {/* Détail Technique */}
+                <div className="bg-slate-900 text-slate-400 p-10 rounded-[40px] shadow-2xl shadow-indigo-900/10">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-8">Répartition Sociale</h3>
+                  <div className="space-y-5">
+                    {Object.entries(result.repartitionTaxes || {}).map(([key, val]) => (
+                      val > 0 && key !== 'total' && (
+                        <div key={key} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold text-slate-200 uppercase tracking-widest">{key}</span>
+                            <span className="font-mono text-white text-sm font-bold">{formatCurrency(val)}</span>
+                          </div>
+                          <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(val / (result.repartitionTaxes?.total || 1)) * 100}%` }}
+                              transition={{ duration: 1, delay: 0.2 }}
+                              className="h-full bg-indigo-500" 
+                            ></motion.div>
+                          </div>
                         </div>
-                      </div>
-                    )
-                  ))}
-                  <div className="pt-4 border-t border-slate-800 flex justify-between items-center font-bold text-white">
-                    <span>TOTAL</span>
-                    <span className="text-xl">{formatCurrency(result.montantPS)}</span>
+                      )
+                    ))}
+                    <div className="pt-6 mt-6 border-t border-slate-800 flex justify-between items-center">
+                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">TOTAL PS</span>
+                      <span className="text-2xl font-black text-white">{formatCurrency(result.montantPS)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <PDFDownloadButton 
-                result={result} 
-                input={{
-                  dateOuverture,
-                  valeurLiquidative: Number(vlTotale),
-                  totalVersements: result.capitalInitial,
-                  events
-                }} 
-              />
-            </div>
-
-            {/* Tableau des Périodes */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-                <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                  <div className="w-2 h-6 bg-amber-400 rounded-full"></div>
-                  Ventilation des gains par période
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-xs uppercase tracking-wider text-slate-400 font-black border-b border-slate-50">
-                        <th className="pb-4">Période Fiscale</th>
-                        <th className="pb-4 text-right">Quote-part Gain</th>
-                        <th className="pb-4 text-right">Taux</th>
-                        <th className="pb-4 text-right">Prélèvement</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {result.detailsParPeriode?.map((p, i) => (
-                        <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
-                          <td className="py-4 font-medium text-slate-700">{p.periodLabel}</td>
-                          <td className="py-4 text-right font-mono text-slate-600 text-sm">{formatCurrency(p.gain)}</td>
-                          <td className="py-4 text-right">
-                            <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-500">
-                              {p.rates.total}%
-                            </span>
-                          </td>
-                          <td className="py-4 text-right font-bold text-red-500 text-sm">-{formatCurrency(p.taxes.total)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {/* Actions */}
+                <div className="pt-2">
+                  <PDFDownloadButton 
+                    result={result} 
+                    input={{
+                      dateOuverture,
+                      valeurLiquidative: Number(vlTotale),
+                      totalVersements: result.capitalInitial,
+                      events
+                    }} 
+                  />
                 </div>
               </div>
 
-              <CalculationTransparency result={result} />
-              
-              {result.retraitsPassesDetails && result.retraitsPassesDetails.length > 0 && (
-                <PastWithdrawalsTable retraits={result.retraitsPassesDetails} />
-              )}
+              {/* Tableau des Périodes */}
+              <div className="lg:col-span-2 space-y-8">
+                <div className="bg-white p-10 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-1.5 h-8 bg-amber-400 rounded-full"></div>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900">Quotes-parts temporelles</h3>
+                      <p className="text-sm text-slate-400 font-medium">Ventilation des gains par palier fiscal</p>
+                    </div>
+                  </div>
+                  
+                  <div className="overflow-x-auto -mx-2">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+                          <th className="pb-6 pl-2">Période Fiscale</th>
+                          <th className="pb-6 text-right">Gain</th>
+                          <th className="pb-6 text-center">Taux</th>
+                          <th className="pb-6 text-right pr-2">Prélèvement</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {result.detailsParPeriode?.map((p, i) => (
+                          <tr key={i} className="group transition-all hover:bg-slate-50/50">
+                            <td className="py-5 pl-2">
+                              <div className="text-sm font-bold text-slate-700">{p.periodLabel}</div>
+                            </td>
+                            <td className="py-5 text-right">
+                              <div className="text-sm font-mono text-slate-500">{formatCurrency(p.gain)}</div>
+                            </td>
+                            <td className="py-5 text-center">
+                              <span className="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
+                                {p.rates.total}%
+                              </span>
+                            </td>
+                            <td className="py-5 text-right pr-2">
+                              <div className="text-sm font-black text-red-500">-{formatCurrency(p.taxes.total)}</div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <CalculationTransparency result={result} />
+                
+                {result.retraitsPassesDetails && result.retraitsPassesDetails.length > 0 && (
+                  <PastWithdrawalsTable retraits={result.retraitsPassesDetails} />
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

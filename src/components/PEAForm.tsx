@@ -284,7 +284,7 @@ export default function PEAForm() {
               </div>
             </div>
 
-            <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
+            <div className="border border-slate-100 rounded-2xl overflow-visible bg-slate-50/50">
               {sortedEvents.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-sm italic">
                   Aucun mouvement de capital enregistré. Ajoutez vos versements initiaux et complémentaires.
@@ -334,7 +334,7 @@ export default function PEAForm() {
                               VL à date
                               <div className="group relative">
                                 <Info size={12} className="text-slate-400 cursor-help" />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-[11px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center leading-tight border border-slate-700 normal-case font-normal whitespace-normal">
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-[11px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center leading-tight border border-slate-700 normal-case font-normal whitespace-normal overflow-visible">
                                   <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
                                   correspond au solde total de votre PEA (espèces + titres) à cette date.
                                   <div className="mt-2 pt-2 border-t border-slate-700 italic text-slate-400">

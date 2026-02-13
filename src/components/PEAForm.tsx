@@ -192,7 +192,7 @@ export default function PEAForm() {
                 <TrendingUp size={16} /> VL Actuelle (EUR)
                 <div className="group relative">
                   <Info size={14} className="text-slate-400 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed border border-slate-700">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed border border-slate-700 whitespace-normal">
                     <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
                     correspond au solde total de votre PEA (espèces + titres) à cette date.
                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
@@ -232,7 +232,7 @@ export default function PEAForm() {
                   Valeurs Liquidatives aux dates pivots (CFONB)
                   <div className="group relative normal-case tracking-normal">
                     <Info size={14} className="text-blue-400 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed border border-slate-700">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed border border-slate-700 whitespace-normal">
                       <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
                       correspond au solde total de votre PEA (espèces + titres) à cette date.
                       <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
@@ -334,7 +334,7 @@ export default function PEAForm() {
                               VL à date
                               <div className="group relative">
                                 <Info size={12} className="text-slate-400 cursor-help" />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-[11px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-tight border border-slate-700 normal-case font-normal">
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-[11px] rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-tight border border-slate-700 normal-case font-normal whitespace-normal">
                                   <span className="font-bold text-indigo-300 block mb-1">Valeur Liquidative</span>
                                   correspond au solde total de votre PEA (espèces + titres) à cette date.
                                   <div className="mt-2 pt-2 border-t border-slate-700 italic text-slate-400">

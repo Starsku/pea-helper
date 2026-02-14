@@ -18,7 +18,7 @@ export default function Home() {
             className="inline-flex items-center justify-center gap-2.5 mb-6 px-4 py-2 bg-white rounded-full border border-slate-100 shadow-sm"
           >
             <Zap className="text-indigo-600 fill-indigo-600" size={20} />
-            <span className="text-sm font-semibold text-slate-600">Simulateur Fiscal Intelligent</span>
+            <span className="text-sm font-semibold text-slate-600">Simulateur fiscal</span>
           </motion.div>
           
           <motion.h1 
@@ -30,13 +30,13 @@ export default function Home() {
             PEA <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Helper</span>
           </motion.h1>
           
-          <motion.p 
+                    <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed"
           >
-            Maîtrisez vos prélèvements sociaux. Calculateur professionnel avec support des <span className="text-slate-900 font-medium">taux historiques</span> et détail complet des contributions.
+            Simulateur de prélèvements sociaux sur retraits PEA.
           </motion.p>
         </header>
 

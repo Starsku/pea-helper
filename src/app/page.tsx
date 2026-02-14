@@ -10,31 +10,31 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#fcfcfd] py-16 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-16 text-center">
+        <header className="mb-20 text-center">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center gap-2.5 mb-6 px-4 py-2 bg-white rounded-full border border-slate-100 shadow-sm"
+            className="inline-flex items-center justify-center gap-2.5 mb-8 px-5 py-2 bg-indigo-50/30 rounded-full border border-indigo-100 shadow-sm backdrop-blur-sm"
           >
-            <Zap className="text-indigo-600 fill-indigo-600" size={20} />
-            <span className="text-sm font-semibold text-slate-600">Simulateur fiscal</span>
+            <Zap className="text-indigo-600 fill-indigo-600" size={18} />
+            <span className="text-xs uppercase tracking-widest font-bold text-indigo-900/70">Simulateur fiscal</span>
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-5xl md:text-6xl font-black tracking-tight text-slate-900 mb-6"
+            className="text-6xl md:text-7xl font-black tracking-tighter text-slate-900 mb-8 drop-shadow-sm"
           >
-            PEA <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Helper</span>
+            PEA <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500">Helper</span>
           </motion.h1>
           
-                    <motion.p 
+          <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-light"
           >
             Simulateur de prélèvements sociaux sur retraits PEA.
           </motion.p>

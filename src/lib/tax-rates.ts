@@ -1,6 +1,6 @@
 /**
  * Taux historiques des prélèvements sociaux applicables au PEA
- * Source : CFONB / Bulletin Officiel des Finances Publiques
+ * Source : Bulletin Officiel des Finances Publiques
  */
 
 export interface TaxRates {

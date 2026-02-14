@@ -122,7 +122,7 @@ export const VERSION = {
       version: '3.1.0',
       date: '12/02/2026',
       changes: [
-        'PDF strictement conforme au standard CFONB 2019',
+        'PDF conforme au standard 2019',
         'Réinitialisation complète du formulaire (incluant date)',
         'Nouveau layout avec colonne version à droite',
         'Nettoyage du titre (suppression des badges colorés)',

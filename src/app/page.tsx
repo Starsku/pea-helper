@@ -36,7 +36,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed"
           >
-            Maîtrisez vos prélèvements sociaux. Calculateur professionnel avec support des <span className="text-slate-900 font-medium">taux historiques</span> et détail complet des contributions CFONB.
+            Maîtrisez vos prélèvements sociaux. Calculateur professionnel avec support des <span className="text-slate-900 font-medium">taux historiques</span> et détail complet des contributions.
           </motion.p>
         </header>
 
@@ -71,7 +71,7 @@ export default function Home() {
         
         <footer className="mt-24 pt-12 border-t border-slate-100 text-center">
           <p className="text-slate-400 text-sm font-medium">© 2026 PEA Helper — Développé par FORGE</p>
-          <p className="mt-3 text-slate-300 text-xs uppercase tracking-widest">Conforme aux directives fiscales CFONB</p>
+          <p className="mt-3 text-slate-300 text-xs uppercase tracking-widest"></p>
         </footer>
       </div>
     </main>

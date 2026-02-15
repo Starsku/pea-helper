@@ -1,5 +1,12 @@
 # DEVLOG
 
+## 2026-02-15 — Rework page /login en “single card” (style Reviewwiz)
+- Nouveau layout centré (mobile-first), branding en haut + tagline + footer discret.
+- AuthBar redesign: bouton Google large, séparateur “Ou via Email”, champs email/mdp avec icônes, CTA primaire pleine largeur.
+- Lien “Pas encore de compte ? S’inscrire” bascule le mode signup (sans créer une nouvelle route).
+- Fonctionnalités Firebase/Auth existantes conservées, /app inchangé.
+
+
 ## 2026-02-15 — Login UI polish (Pixel)
 
 ### Objectif

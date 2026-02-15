@@ -2,6 +2,22 @@
 
 ## 2026-02-15 — Auth Firebase + Firestore clients/retraits
 
+## 2026-02-15 — Routing login-first + app protégée
+
+### Objectif
+- Arrivée par défaut sur `/login`.
+- L'application (calcul / clients / retraits) est déplacée sous `/app` et **protégée** par middleware.
+
+### Ajouts / modifications
+- **Ajout** `src/app/login/page.tsx` (page dédiée login, réutilise `AuthBar`).
+- **Ajout** `src/app/app/page.tsx` (UI existante de calcul déplacée ici, inchangée visuellement).
+- **Modif** `src/app/page.tsx` (redirect `/` -> `/app` si cookie de session, sinon `/login`).
+- **Ajout** `middleware.ts` (garde d'accès: autorise `/login`, `/api/auth/*`, `/_next/*`, et assets; redirige sinon vers `/login`).
+
+### Comportement
+- Sans cookie de session: toute route (sauf exceptions) redirige vers `/login`.
+- Avec cookie de session: accès normal à `/app` et reste de l'app.
+
 ### Ajouts
 - Auth Firebase (Google + Email/Password) côté client avec création de session cookie HttpOnly côté serveur.
 - Modèle Firestore `users/{uid}/clients/{clientId}/withdrawals/{withdrawalId}`.

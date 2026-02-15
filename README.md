@@ -35,6 +35,14 @@ Net versé = Montant Retrait - Prélèvements Sociaux
 - `src/lib/pea-engine.ts` : Moteur de calcul pur.
 - `src/components/PEAForm.tsx` : Interface utilisateur.
 
+## Routing (login-first)
+- `/login` : page de connexion (UI via `AuthBar`).
+- `/app` : application (simulateur + clients/retraits) — **protégée**.
+- `/` : redirige vers `/app` si un cookie de session est présent, sinon vers `/login`.
+
+Protection:
+- Un `middleware.ts` bloque tout accès (sauf `/login`, `/api/auth/*`, `/_next/*` et quelques assets) si le cookie de session `SESSION_COOKIE_NAME` est absent.
+
 ## Firebase (Auth + Firestore)
 
 ### Variables d’environnement

@@ -206,22 +206,9 @@ export default function AuthBar({ onUserChange }: Props) {
   }
 
   if (firebaseAuth && user) {
-    return (
-      <div className="rounded-[28px] border border-slate-200/60 bg-white p-6 shadow-[0_12px_40px_rgb(0,0,0,0.06)]">
-        <div className="text-center">
-          <div className="text-xs font-semibold text-slate-500">Connecté</div>
-          <div className="mt-1 text-sm font-bold text-slate-900">{label}</div>
-        </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={busy}
-          className="mt-5 inline-flex w-full items-center justify-center rounded-[18px] bg-slate-900 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-black disabled:opacity-60"
-        >
-          {busy ? "Veuillez patienter…" : "Déconnexion"}
-        </button>
-      </div>
-    );
+    // When authenticated, we keep this component silent.
+    // The app shell header exposes the user menu + logout action.
+    return null;
   }
 
   return (

@@ -3,48 +3,46 @@
 import PEAForm from "@/components/PEAForm";
 import { VersionColumn } from "@/components/VersionColumn";
 import TaxHistoryTable from "@/components/TaxHistoryTable";
-import AuthBar from "@/components/AuthBar";
+import AppHeader from "@/components/AppHeader";
 import { Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function AppHome() {
   return (
-    <main className="min-h-screen bg-[#fcfcfd] py-16 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-20 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center gap-2.5 mb-8 px-5 py-2 bg-indigo-50/30 rounded-full border border-indigo-100 shadow-sm backdrop-blur-sm"
-          >
-            <Zap className="text-indigo-600 fill-indigo-600" size={18} />
-            <span className="text-xs uppercase tracking-widest font-bold text-indigo-900/70">
-              Simulateur fiscal
-            </span>
-          </motion.div>
+    <div className="min-h-screen bg-[#fcfcfd]">
+      <AppHeader
+        subtitle={
+          <span className="inline-flex items-center gap-2">
+            <Zap className="h-4 w-4 text-indigo-600" />
+            <span>Simulateur fiscal</span>
+          </span>
+        }
+      />
 
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-6xl md:text-7xl font-black tracking-tighter text-slate-900 mb-8 drop-shadow-sm"
-          >
-            PEA{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500">
-              Helper
-            </span>
-          </motion.h1>
+      <main className="py-10 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-12">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900"
+            >
+              PEA{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500">
+                Helper
+              </span>
+            </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-light"
-          >
-            Simulateur de prélèvements sociaux sur retraits PEA.
-          </motion.p>
-        </header>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-4 text-base md:text-lg text-slate-600 max-w-3xl leading-relaxed"
+            >
+              Simulateur de prélèvements sociaux sur retraits PEA.
+            </motion.p>
+          </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           <motion.div
@@ -54,7 +52,6 @@ export default function AppHome() {
             className="lg:col-span-8 xl:col-span-9"
           >
             <div className="space-y-8">
-              <AuthBar />
               <PEAForm />
             </div>
           </motion.div>
@@ -78,13 +75,12 @@ export default function AppHome() {
           <TaxHistoryTable />
         </motion.div>
 
-        <footer className="mt-24 pt-12 border-t border-slate-100 text-center">
-          <p className="text-slate-400 text-sm font-medium">
-            © 2026 PEA Helper — Développé par FORGE
-          </p>
+        <footer className="mt-20 pt-10 border-t border-slate-100 text-center">
+          <p className="text-slate-400 text-sm font-medium">© 2026 PEA Helper — Développé par FORGE</p>
           <p className="mt-3 text-slate-300 text-xs uppercase tracking-widest"></p>
         </footer>
       </div>
     </main>
+    </div>
   );
 }

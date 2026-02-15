@@ -1,5 +1,10 @@
 # DEVLOG
 
+## 2026-02-15 — App shell: user menu + suppression bloc "Connecté"
+- `/app` : ajout d’un header sticky propre avec **UserMenu** top-right (avatar initiale + email tronqué + dropdown Déconnexion).
+- `AuthBar` : ne rend plus de bloc "Connecté" dans le contenu quand l’utilisateur est déjà authentifié (l’action logout est dans le header).
+- Build: `npm run build` OK.
+
 ## 2026-02-15 — Post-login redirect fiable
 - `src/components/AuthBar.tsx` : après `onAuthStateChanged`, on attend la réponse OK de `/api/auth/login` (cookie session) puis redirection vers `/app` (ou `?next=`). En cas d’échec, affichage d’une erreur claire (au lieu d’un état "connecté" bloqué sur `/login`).
 

@@ -3,6 +3,7 @@
 import PEAForm from "@/components/PEAForm";
 import { VersionColumn } from "@/components/VersionColumn";
 import TaxHistoryTable from "@/components/TaxHistoryTable";
+import AuthBar from "@/components/AuthBar";
 import { Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -47,7 +48,10 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="lg:col-span-8 xl:col-span-9"
           >
-            <PEAForm />
+            <div className="space-y-8">
+              <AuthBar />
+              <PEAForm />
+            </div>
           </motion.div>
           
           <motion.div 

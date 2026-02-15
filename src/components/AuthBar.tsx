@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   GoogleAuthProvider,
   signInWithEmailAndPassword,
@@ -105,6 +106,8 @@ function LockIcon(props: { className?: string }) {
 }
 
 export default function AuthBar({ onUserChange }: Props) {
+  const router = useRouter();
+
   const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -118,21 +121,34 @@ export default function AuthBar({ onUserChange }: Props) {
       setUser(u);
       onUserChange?.(u);
 
-      // If we have a user, attempt to mint session cookie
+      // If we have a user, mint session cookie then redirect.
+      // We intentionally only redirect after the server confirms the cookie was set.
       if (u) {
         try {
           const idToken = await u.getIdToken();
-          await fetch("/api/auth/login", {
+          const res = await fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ idToken }),
           });
+
+          if (!res.ok) {
+            const payload = await res.json().catch(() => null);
+            const msg = payload?.error ? String(payload.error) : "Connexion serveur refusée.";
+            setError(msg);
+            return;
+          }
+
+          // Now that the session cookie exists, navigate away from /login.
+          const next = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
+          const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/app";
+          router.replace(safeNext);
         } catch {
-          // ignore: app still works without server session
+          setError("Impossible de créer la session. Vérifiez votre connexion et réessayez.");
         }
       }
     });
-  }, [onUserChange]);
+  }, [onUserChange, router]);
 
   const label = useMemo(() => {
     if (!user) return "Connexion";
@@ -183,6 +199,7 @@ export default function AuthBar({ onUserChange }: Props) {
       await fetch("/api/auth/logout", { method: "POST" });
       if (!firebaseAuth) return;
       await signOut(firebaseAuth);
+      router.replace("/login");
     } finally {
       setBusy(false);
     }

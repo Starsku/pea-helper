@@ -1,5 +1,8 @@
 # DEVLOG
 
+## 2026-02-15 — Post-login redirect fiable
+- `src/components/AuthBar.tsx` : après `onAuthStateChanged`, on attend la réponse OK de `/api/auth/login` (cookie session) puis redirection vers `/app` (ou `?next=`). En cas d’échec, affichage d’une erreur claire (au lieu d’un état "connecté" bloqué sur `/login`).
+
 ## 2026-02-15 — Rework page /login en “single card” (style Reviewwiz)
 - Nouveau layout centré (mobile-first), branding en haut + tagline + footer discret.
 - AuthBar redesign: bouton Google large, séparateur “Ou via Email”, champs email/mdp avec icônes, CTA primaire pleine largeur.

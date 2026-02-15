@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { calculatePEAGain } from "@/lib/pea-engine";
 import { GainResult, PEAEvent, EventType } from "@/lib/engine/types";
 import { PIVOT_DATES } from "@/lib/tax-rates";
@@ -10,6 +10,9 @@ import dynamic from "next/dynamic";
 import { Plus, Trash2, Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle, Info, RefreshCw, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { motion, AnimatePresence } from "framer-motion";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { firebaseAuth } from "@/lib/firebase/client";
+import { listClientSuggestions, loadLastWithdrawal, saveWithdrawal } from "@/lib/clients/firestore";
 
 // Helper simple pour générer des IDs sans dépendance externe
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -21,12 +24,24 @@ const PDFDownloadButton = dynamic(() => import("./PDFDownloadButton"), {
 });
 
 export default function PEAForm() {
+  const [user, setUser] = useState<User | null>(null);
+  const [clientRef, setClientRef] = useState("");
+  const [clientSuggestions, setClientSuggestions] = useState<Array<{ clientId: string; clientRefRaw?: string }>>([]);
+  const [clientSuggestionsOpen, setClientSuggestionsOpen] = useState(false);
+  const [loadingLast, setLoadingLast] = useState(false);
+  const [firestoreError, setFirestoreError] = useState<string | null>(null);
+
   const [dateOuverture, setDateOuverture] = useState("");
   const [vlTotale, setVlTotale] = useState("");
   const [montantRetraitActuel, setMontantRetraitActuel] = useState("");
   const [events, setEvents] = useState<PEAEvent[]>([]);
   const [isSortingEnabled, setIsSortingEnabled] = useState(true);
   const [result, setResult] = useState<GainResult | null>(null);
+
+  useEffect(() => {
+    if (!firebaseAuth) return;
+    return onAuthStateChanged(firebaseAuth, (u) => setUser(u));
+  }, []);
 
   // Re-enable sorting after a delay of inactivity
   useEffect(() => {
@@ -37,6 +52,35 @@ export default function PEAForm() {
       return () => clearTimeout(timer);
     }
   }, [isSortingEnabled, events]);
+
+  // Suggestions clients (prefix)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      setFirestoreError(null);
+      if (!user || !clientRef) {
+        setClientSuggestions([]);
+        return;
+      }
+      try {
+        const suggestions = await listClientSuggestions(user.uid, clientRef);
+        if (!cancelled) setClientSuggestions(suggestions);
+      } catch (e: any) {
+        if (!cancelled) setFirestoreError(e?.message || "Erreur Firestore");
+      }
+    }
+
+    const t = setTimeout(run, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [user, clientRef]);
+
+  const canPersist = useMemo(() => {
+    return Boolean(user && clientRef.trim().length > 0);
+  }, [user, clientRef]);
 
   // Initialisation auto des VL Pivots quand la date d'ouverture change
   useEffect(() => {
@@ -121,10 +165,10 @@ export default function PEAForm() {
     return true;
   };
 
-  const handleCalculate = (e: React.FormEvent) => {
+  const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid()) return;
-    
+
     const totalVersements = events
       .filter(e => e.type === 'VERSEMENT')
       .reduce((acc, e) => acc + (e.montant || 0), 0);
@@ -135,8 +179,36 @@ export default function PEAForm() {
       totalVersements,
       events
     }, Number(montantRetraitActuel));
-    
+
     setResult(res);
+
+    // Persist withdrawal (best-effort)
+    setFirestoreError(null);
+    if (canPersist && user) {
+      try {
+        await saveWithdrawal(
+          user.uid,
+          clientRef,
+          {
+            dateOuverture,
+            vlTotale: Number(vlTotale),
+            montantRetraitActuel: Number(montantRetraitActuel),
+            events,
+          },
+          {
+            assietteGain: res.assietteGain,
+            montantPS: res.montantPS,
+            netVendeur: res.netVendeur,
+            repartitionTaxes: res.repartitionTaxes,
+            detailsParPeriode: res.detailsParPeriode,
+            capitalInitial: res.capitalInitial,
+            retraitsPassesDetails: res.retraitsPassesDetails,
+          }
+        );
+      } catch (e: any) {
+        setFirestoreError(e?.message || "Impossible d'enregistrer le retrait");
+      }
+    }
   };
 
   const sortedEvents = isSortingEnabled 
@@ -173,6 +245,82 @@ export default function PEAForm() {
           }}
           className="space-y-12"
         >
+          {/* Client */}
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Client (référence)</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={clientRef}
+                onChange={(e) => {
+                  setClientRef(e.target.value);
+                  setClientSuggestionsOpen(true);
+                }}
+                onFocus={() => setClientSuggestionsOpen(true)}
+                onBlur={() => setTimeout(() => setClientSuggestionsOpen(false), 150)}
+                placeholder="Ex: DUPONT123"
+                className={`w-full p-4 bg-slate-50/50 border ${!clientRef ? 'border-slate-100' : 'border-slate-100'} rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all outline-none font-medium text-slate-700`}
+              />
+
+              {user && clientSuggestionsOpen && clientSuggestions.length > 0 && (
+                <div className="absolute z-50 mt-2 w-full bg-white border border-slate-100 rounded-2xl shadow-xl overflow-hidden">
+                  {clientSuggestions.map((s) => (
+                    <button
+                      key={s.clientId}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setClientRef(s.clientRefRaw || s.clientId);
+                        setClientSuggestionsOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="text-sm font-bold text-slate-900">{s.clientRefRaw || s.clientId}</div>
+                      <div className="text-[11px] text-slate-400 font-bold">{s.clientId}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
+              <button
+                type="button"
+                onClick={async () => {
+                  setFirestoreError(null);
+                  if (!user || !clientRef.trim()) return;
+                  setLoadingLast(true);
+                  try {
+                    const last = await loadLastWithdrawal(user.uid, clientRef);
+                    if (last?.input) {
+                      const input: any = last.input;
+                      setDateOuverture(input.dateOuverture || "");
+                      setVlTotale(String(input.vlTotale ?? ""));
+                      setMontantRetraitActuel(String(input.montantRetraitActuel ?? ""));
+                      setEvents((input.events as any) || []);
+                      setResult(null);
+                    }
+                  } catch (e: any) {
+                    setFirestoreError(e?.message || "Erreur lors du chargement");
+                  } finally {
+                    setLoadingLast(false);
+                  }
+                }}
+                disabled={!user || !clientRef.trim() || loadingLast}
+                className="px-4 py-2.5 bg-white text-slate-600 rounded-xl text-xs font-bold border border-slate-100 hover:bg-slate-50 disabled:text-slate-300 disabled:border-slate-50 disabled:bg-white transition-all"
+              >
+                Reprendre le dernier retrait
+              </button>
+              {!user && (
+                <div className="text-[11px] text-slate-400 font-medium">
+                  Connectez-vous pour activer l'historique client.
+                </div>
+              )}
+            </div>
+
+            {firestoreError && <div className="text-xs text-red-500 font-bold">{firestoreError}</div>}
+          </div>
+
           {/* Infos de base */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="space-y-3">

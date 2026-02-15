@@ -16,6 +16,30 @@ type Props = {
   onUserChange?: (user: User | null) => void;
 };
 
+function getFirebaseErrorMessage(err: any) {
+  const code: string | undefined = err?.code;
+  switch (code) {
+    case "auth/invalid-email":
+      return "Adresse email invalide.";
+    case "auth/missing-password":
+      return "Mot de passe requis.";
+    case "auth/wrong-password":
+      return "Mot de passe incorrect.";
+    case "auth/user-not-found":
+      return "Aucun compte associé à cet email.";
+    case "auth/email-already-in-use":
+      return "Cet email est déjà utilisé.";
+    case "auth/weak-password":
+      return "Mot de passe trop faible (6 caractères minimum).";
+    case "auth/popup-closed-by-user":
+      return "Connexion annulée.";
+    case "auth/network-request-failed":
+      return "Problème réseau. Réessayez.";
+    default:
+      return err?.message || "Une erreur est survenue. Réessayez.";
+  }
+}
+
 export default function AuthBar({ onUserChange }: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState("");
@@ -47,9 +71,14 @@ export default function AuthBar({ onUserChange }: Props) {
   }, [onUserChange]);
 
   const label = useMemo(() => {
-    if (!user) return "Se connecter";
+    if (!user) return "Connexion";
     return user.email || "Connecté";
   }, [user]);
+
+  const primaryCtaLabel = useMemo(() => {
+    if (busy) return "Veuillez patienter…";
+    return mode === "signin" ? "Se connecter" : "Créer mon compte";
+  }, [busy, mode]);
 
   async function handleGoogle() {
     setBusy(true);
@@ -59,7 +88,7 @@ export default function AuthBar({ onUserChange }: Props) {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(firebaseAuth, provider);
     } catch (e: any) {
-      setError(e?.message || "Erreur Google");
+      setError(getFirebaseErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -70,13 +99,14 @@ export default function AuthBar({ onUserChange }: Props) {
     setError(null);
     try {
       if (!firebaseAuth) return;
+      const trimmedEmail = email.trim();
       if (mode === "signin") {
-        await signInWithEmailAndPassword(firebaseAuth, email, password);
+        await signInWithEmailAndPassword(firebaseAuth, trimmedEmail, password);
       } else {
-        await createUserWithEmailAndPassword(firebaseAuth, email, password);
+        await createUserWithEmailAndPassword(firebaseAuth, trimmedEmail, password);
       }
     } catch (e: any) {
-      setError(e?.message || "Erreur de connexion");
+      setError(getFirebaseErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -95,21 +125,25 @@ export default function AuthBar({ onUserChange }: Props) {
   }
 
   return (
-    <div className="bg-white p-6 md:p-8 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
-      <div className="flex items-center justify-between gap-4">
+    <div className="relative overflow-hidden rounded-[28px] border border-slate-200/60 bg-white p-6 shadow-[0_12px_40px_rgb(0,0,0,0.06)] md:p-8">
+      <div className="pointer-events-none absolute inset-x-0 -top-24 h-44 bg-[radial-gradient(closest-side,rgba(99,102,241,0.18),transparent)]" />
+
+      <div className="relative flex items-start justify-between gap-4">
         <div>
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Compte</div>
-          <div className="text-sm font-bold text-slate-900 mt-1">{label}</div>
+          <div className="text-xs font-semibold text-slate-500">{user ? "Connecté" : "Connexion"}</div>
+          <div className="mt-1 text-sm font-bold text-slate-900">{label}</div>
         </div>
 
         {!firebaseAuth ? (
-          <div className="text-[11px] text-slate-400 font-bold">Firebase non configuré</div>
+          <div className="rounded-full bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-500 ring-1 ring-inset ring-slate-200/60">
+            Firebase non configuré
+          </div>
         ) : user ? (
           <button
             type="button"
             onClick={handleLogout}
             disabled={busy}
-            className="px-4 py-2.5 bg-white text-slate-600 rounded-xl text-xs font-bold border border-slate-100 hover:bg-slate-50 transition-all"
+            className="rounded-xl border border-slate-200/60 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-all hover:bg-slate-50 disabled:opacity-60"
           >
             Déconnexion
           </button>
@@ -118,71 +152,105 @@ export default function AuthBar({ onUserChange }: Props) {
             type="button"
             onClick={handleGoogle}
             disabled={busy}
-            className="px-4 py-2.5 bg-white text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100 hover:bg-indigo-50 transition-all"
+            className="rounded-xl border border-indigo-200/60 bg-white px-4 py-2.5 text-xs font-bold text-indigo-700 transition-all hover:bg-indigo-50 disabled:opacity-60"
+            aria-label="Se connecter avec Google"
           >
-            Google
+            {busy ? "Connexion…" : "Continuer avec Google"}
           </button>
         )}
       </div>
 
       {firebaseAuth && !user && (
-        <div className="mt-5 space-y-3">
-          <div className="flex gap-2">
+        <div className="relative mt-6">
+          <div className="flex rounded-2xl border border-slate-200/60 bg-slate-50/50 p-1">
             <button
               type="button"
-              onClick={() => setMode("signin")}
-              className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                mode === "signin"
-                  ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-white text-slate-500 border-slate-100 hover:bg-slate-50"
+              onClick={() => {
+                setMode("signin");
+                setError(null);
+              }}
+              disabled={busy}
+              className={`flex-1 rounded-2xl px-3 py-2 text-xs font-bold transition-all disabled:opacity-60 ${
+                mode === "signin" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Email
+              Se connecter
             </button>
             <button
               type="button"
-              onClick={() => setMode("signup")}
-              className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                mode === "signup"
-                  ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-white text-slate-500 border-slate-100 hover:bg-slate-50"
+              onClick={() => {
+                setMode("signup");
+                setError(null);
+              }}
+              disabled={busy}
+              className={`flex-1 rounded-2xl px-3 py-2 text-xs font-bold transition-all disabled:opacity-60 ${
+                mode === "signup" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Créer
+              Créer un compte
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@domaine.com"
-              className="w-full p-3 bg-slate-50/50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all outline-none font-medium text-slate-700"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="mot de passe"
-              className="w-full p-3 bg-slate-50/50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all outline-none font-medium text-slate-700"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleEmailPassword}
-            disabled={busy || !email || !password}
-            className="w-full py-3 px-4 bg-slate-900 hover:bg-black disabled:bg-slate-200 disabled:cursor-not-allowed text-white text-sm font-bold rounded-[18px] transition-all"
+          <form
+            className="mt-4 space-y-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleEmailPassword();
+            }}
           >
-            {mode === "signin" ? "Connexion" : "Créer le compte"}
-          </button>
+            <label className="block">
+              <div className="mb-1 text-[11px] font-semibold text-slate-600">Email</div>
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@domaine.com"
+                disabled={busy}
+                className="w-full rounded-2xl border border-slate-200/60 bg-white p-3 font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:ring-4 focus:ring-indigo-500/10 disabled:bg-slate-50"
+              />
+            </label>
 
-          {error && <div className="text-xs text-red-500 font-bold">{error}</div>}
+            <label className="block">
+              <div className="mb-1 text-[11px] font-semibold text-slate-600">Mot de passe</div>
+              <input
+                type="password"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={mode === "signin" ? "Votre mot de passe" : "6 caractères minimum"}
+                disabled={busy}
+                className="w-full rounded-2xl border border-slate-200/60 bg-white p-3 font-medium text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:ring-4 focus:ring-indigo-500/10 disabled:bg-slate-50"
+              />
+            </label>
 
-          <div className="text-[11px] text-slate-400">
-            Sans connexion, les calculs restent disponibles mais l'historique client n'est pas enregistré.
-          </div>
+            <button
+              type="submit"
+              disabled={busy || !email.trim() || !password}
+              className="group relative inline-flex w-full items-center justify-center gap-2 rounded-[18px] bg-slate-900 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-black disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+            >
+              <span className={busy ? "opacity-0" : "opacity-100"}>{primaryCtaLabel}</span>
+              {busy && (
+                <span className="absolute inset-0 inline-flex items-center justify-center">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                </span>
+              )}
+            </button>
+
+            {error && (
+              <div
+                className="rounded-2xl border border-red-200/60 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+
+            <div className="text-[11px] leading-5 text-slate-500">
+              En continuant, vous acceptez l’utilisation d’un cookie de session pour sécuriser l’accès à votre
+              historique.
+            </div>
+          </form>
         </div>
       )}
     </div>

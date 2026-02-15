@@ -1,5 +1,26 @@
 # DEVLOG
 
+## 2026-02-15 — Login UI polish (Pixel)
+
+### Objectif
+- Mettre `/login` au standard **clean SaaS** sans toucher au layout de `/app`.
+- Garder les flows (Google + email/password) en améliorant copy, spacing, typographie, states, responsive.
+
+### Fichiers modifiés
+- **Modif** `src/app/login/page.tsx`
+  - Mise en page responsive en grille (col gauche: value prop, col droite: carte d’auth).
+  - Copy SaaS + mini features (Historique / Synchronisation) + rassurance “continuer sans compte”.
+- **Modif** `src/components/AuthBar.tsx`
+  - Refine UI card (border/shadow/glow subtil) + meilleure hiérarchie visuelle.
+  - Boutons et libellés plus clairs ("Continuer avec Google", toggles, CTA).
+  - Ajout états **loading** (spinner) + disable inputs/actions.
+  - Erreurs Firebase mappées en messages FR lisibles + rendu en alert.
+  - Passage à un `<form>` (submit via Enter).
+
+### Comportement
+- Aucun changement fonctionnel des flows (Google / email+mdp / logout).
+- Meilleure UX: feedback immédiat en chargement, erreurs plus compréhensibles, meilleure accessibilité (role=alert, autocomplete).
+
 ## 2026-02-15 — Auth Firebase + Firestore clients/retraits
 
 ## 2026-02-15 — Routing login-first + app protégée
